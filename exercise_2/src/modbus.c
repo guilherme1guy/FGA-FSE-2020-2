@@ -3,6 +3,7 @@
 #include <string.h>
 #include <crc16.h>
 #include <uart.h>
+#include <endian_utils.h>
 
 // self include to get tModbusCommand definition 
 #include <modbus.h>
@@ -135,8 +136,13 @@ tModbusCommand *modbus_create_send_int(int number)
 
     unsigned char *data = calloc(5, sizeof(unsigned char));
     data[0] = 0xB1;
-    memcpy(&(data[1]), &number, sizeof(int));
+    
+    unsigned char* converted_endian = endian_swap((unsigned char *)&number, sizeof(int));
+
+    memcpy(&(data[1]), converted_endian, sizeof(int));
     tModbusCommand *command = modbus_create_command(0x01, 0x16, data, 5);
+
+    free(converted_endian);
 
     return command;
 }
@@ -146,8 +152,13 @@ tModbusCommand *modbus_create_send_float(float number)
 
     unsigned char *data = calloc(5, sizeof(unsigned char));
     data[0] = 0xB2;
-    memcpy(&(data[1]), &number, sizeof(float));
+
+    unsigned char* converted_endian = endian_swap((unsigned char *)&number, sizeof(float));
+
+    memcpy(&(data[1]), converted_endian, sizeof(float));
     tModbusCommand *command = modbus_create_command(0x01, 0x16, data, 5);
+
+    free(converted_endian);
 
     return command;
 }
@@ -185,3 +196,4 @@ tModbusCommand *modbus_create_send_string(char *string)
 
     return command;
 }
+
