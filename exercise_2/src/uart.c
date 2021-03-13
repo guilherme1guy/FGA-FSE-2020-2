@@ -2,6 +2,9 @@
 #include <unistd.h>  //Used for UART
 #include <fcntl.h>   //Used for UART
 #include <termios.h> //Used for UART
+#include <stdlib.h>
+#include <string.h> 
+#include <modbus.h>
 
 
 void uart_communication(unsigned char *data, int data_length)
@@ -75,6 +78,12 @@ void uart_communication(unsigned char *data, int data_length)
                 printf("0x%02X ", rx_buffer[i]);
             }
             printf("\n");
+
+            unsigned char* raw_commnad = calloc(rx_length, sizeof(unsigned char));
+            memcpy(rx_buffer, raw_commnad, rx_length * sizeof(unsigned char));
+
+            modbus_decode(raw_commnad, rx_length);
+            free(raw_commnad);
         }
     }
 

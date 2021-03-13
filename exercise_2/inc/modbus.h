@@ -26,6 +26,7 @@ short get_crc(tModbusCommand *command);
 void modbus_send(tModbusCommand *command);
 
 tModbusCommand *modbus_create_command(unsigned char device_address, unsigned char operation_code, unsigned char *data, int data_length);
+void modbus_decode(unsigned char* raw_command, int size);
 
 tModbusCommand *modbus_create_request_int();
 tModbusCommand *modbus_create_request_float();

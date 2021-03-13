@@ -5,9 +5,8 @@
 #include <uart.h>
 #include <endian_utils.h>
 
-// self include to get tModbusCommand definition 
+// self include to get tModbusCommand definition
 #include <modbus.h>
-
 
 void modbus_free_command(tModbusCommand *command)
 {
@@ -61,7 +60,9 @@ short get_crc(tModbusCommand *command)
     }
 
     unsigned char *raw_command = get_raw_command(command);
-    short crc = calcula_CRC(raw_command, get_raw_length(command));
+    short crc = compute_CRC(raw_command, get_raw_length(command));
+    //short crc = ALT_CRC16(raw_command, get_raw_length(command));
+
     free(raw_command);
 
     return crc;
@@ -82,6 +83,57 @@ tModbusCommand *modbus_create_command(unsigned char device_address, unsigned cha
     return command;
 }
 
+void modbus_decode(unsigned char *raw_command, int size)
+{
+
+    int is_crc_valid = validate_CRC(raw_command, size);
+
+    if (!is_crc_valid)
+    {
+        printf("Invalid CRC for received message!\n");
+        return;
+    }
+
+    int actual_data_length = (size - 4); // removes 2 bytes for op code
+                                         // and device addres and 2 for crc
+    unsigned char *data_copy = calloc(actual_data_length, sizeof(unsigned char));
+
+    memcpy(&raw_command[2], data_copy, actual_data_length);
+
+    tModbusCommand *interpreted_command = modbus_create_command(
+        raw_command[0],
+        raw_command[1],
+        data_copy,
+        actual_data_length);
+
+
+    int string_length;
+    char *received_string;
+    switch (interpreted_command->operation_code)
+    {
+    case 0xA1:
+        printf("Received INT: %d\n", (int)*interpreted_command->data);
+        break;
+    case 0xA2:
+        printf("Received FLOAT: %f\n", (double)*interpreted_command->data);
+        break;
+    case 0xA3:
+
+        string_length = interpreted_command->data[0];
+        received_string = calloc(string_length + 1, sizeof(char)); //adds 1 for '\0'
+    
+        memcpy(&interpreted_command->data[1], received_string, string_length);
+    
+        received_string[string_length+1] = '\0'; // set last char as '\0'
+    
+        printf("Received STRING: %s", received_string);
+
+        free(received_string);
+        break;
+    default:
+        printf("Invalid operation when deconding message!\n");
+    }
+}
 
 void modbus_send(tModbusCommand *command)
 {
@@ -136,8 +188,8 @@ tModbusCommand *modbus_create_send_int(int number)
 
     unsigned char *data = calloc(5, sizeof(unsigned char));
     data[0] = 0xB1;
-    
-    unsigned char* converted_endian = endian_swap((unsigned char *)&number, sizeof(int));
+
+    unsigned char *converted_endian = endian_swap((unsigned char *)&number, sizeof(int));
 
     memcpy(&(data[1]), converted_endian, sizeof(int));
     tModbusCommand *command = modbus_create_command(0x01, 0x16, data, 5);
@@ -153,7 +205,7 @@ tModbusCommand *modbus_create_send_float(float number)
     unsigned char *data = calloc(5, sizeof(unsigned char));
     data[0] = 0xB2;
 
-    unsigned char* converted_endian = endian_swap((unsigned char *)&number, sizeof(float));
+    unsigned char *converted_endian = endian_swap((unsigned char *)&number, sizeof(float));
 
     memcpy(&(data[1]), converted_endian, sizeof(float));
     tModbusCommand *command = modbus_create_command(0x01, 0x16, data, 5);
@@ -196,4 +248,3 @@ tModbusCommand *modbus_create_send_string(char *string)
 
     return command;
 }
-
