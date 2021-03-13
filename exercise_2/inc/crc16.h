@@ -9,6 +9,7 @@
 #define CRC16_H_
 
 short CRC16(short crc, char data);
-short calcula_CRC(unsigned char *commands, int size);
+short compute_CRC(unsigned char *message, int size);
+int validate_CRC(unsigned char *message, int size);
 
 #endif /* CRC16_H_ */

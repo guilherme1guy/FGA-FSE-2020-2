@@ -4,8 +4,9 @@
  *  Created on: 18/03/2014
  *      Author: Renato Coral Sampaio
  */
+#include <string.h>
 
-short CRC16(short crc, char data)
+short CRC16(short crc, unsigned char data)
 {
     const short tbl[256] = {
         0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
@@ -40,14 +41,36 @@ short CRC16(short crc, char data)
         0x4E00, 0x8EC1, 0x8F81, 0x4F40, 0x8D01, 0x4DC0, 0x4C80, 0x8C41,
         0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
         0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040};
+
     return ((crc & 0xFF00) >> 8) ^ tbl[(crc & 0x00FF) ^ (data & 0x00FF)];
 }
 
-short calcula_CRC(unsigned char *commands, int size) {
-	int i;
-	short crc = 0;
-	for(i=0;i<size;i++) {
-		crc = CRC16(crc, commands[i]);
-	}
-	return crc;
+short compute_CRC(unsigned char *message, int size)
+{
+    int i;
+    short crc = 0;
+    for (i = 0; i < size; i++)
+    {
+        crc = CRC16(crc, message[i]);
+    }
+    return crc;
+}
+
+int validate_CRC(unsigned char *message, int size){
+    // size is the length in bytes, including the two crc bytes
+    // this functions returns 0 if CRC is invalid and 1 if it is valid
+
+    short provided_crc;
+    
+    // copy the last two bytes of the message to a local var
+    memcpy(&message[size-2], &provided_crc, sizeof(short));
+    
+    // compute a new crc for the message
+    short computed_crc = compute_CRC(message, size-2);
+
+    // compare and return
+    return (provided_crc == computed_crc);
+
+    // the memcpy operation doesn't need to be freed, since it stores the value onto the
+    // 'provided_crc' memory slot and dosent overrrun it's limits 
 }
