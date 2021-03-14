@@ -228,7 +228,7 @@ vector<unsigned char> ModbusMessage::u_char_pointer_to_vector(unsigned char *ori
     vector<unsigned char> target_vector;
     target_vector.resize(size);
     for(int i = 0; i < size; i++){
-        target_vector.push_back(origin[i]);
+        target_vector[i] = origin[i];
     }
 
     return target_vector;
