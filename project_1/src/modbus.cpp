@@ -143,7 +143,7 @@ void ModbusMessage::decode(ModbusMessage* message) {
 
             string_length = message->data[1];
             for (int i = 0; i < string_length; i++){
-                received_string.push_back(message->data[1 + i]);
+                received_string.push_back(message->data[2 + i]);
             }
             cout << "Received STRING: \"" << received_string << "\"" << endl;
             break;
