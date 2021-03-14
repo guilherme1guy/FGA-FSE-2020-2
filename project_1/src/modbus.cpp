@@ -114,9 +114,9 @@ void ModbusMessage::send(ModbusMessage* message) {
 void ModbusMessage::decode(ModbusMessage* message) {
 
     // preemptive variable declaration
-    unsigned char int_bytes[2];
+    unsigned char int_bytes[4];
     int received_int;
-    unsigned char float_bytes[2];
+    unsigned char float_bytes[4];
     float received_float;
     int string_length;
     string received_string;
@@ -125,16 +125,27 @@ void ModbusMessage::decode(ModbusMessage* message) {
     {
         case 0xA1:
 
-            int_bytes[0] = message->data[2];
-            int_bytes[1] = message->data[1];
+            // when receiving a message the program is not following
+            // modbus standards for endianess (for ints and floats)
+            // c/cpp uses little endian internally and modbus uses big endian
+            // when sending a message I need to convert from little to big endian
+            // but the message I receive has the number in little endian (thus breaking
+            // the modbus standard -- I guess)
+            for(int i = 0; i < 4; i++){
+                // for correct endian conversion:
+                // int_bytes[i] = message->data[4 - i];
+                int_bytes[i] = message->data[i + 1];
+            }
             received_int = *((int *)&int_bytes);
             printf("Received INT: %d\n", received_int);
             break;
 
         case 0xA2:
 
-            float_bytes[0] = message->data[2];
-            float_bytes[1] = message->data[1];
+            for(int i = 0; i < 4; i++){
+                // the same thing as integers
+                float_bytes[i] = message->data[i + 1];
+            }
             received_float = *((float *)&float_bytes);
             printf("Received FLOAT: %f\n", received_float);
             break;
