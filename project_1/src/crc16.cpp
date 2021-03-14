@@ -4,11 +4,11 @@
  *  Created on: 18/03/2014
  *      Author: Renato Coral Sampaio
  */
-#include <string.h>
+#include <cstring> // used for memcpy
 
-short CRC16(short crc, unsigned char data)
+unsigned short CRC16(unsigned short crc, unsigned char data)
 {
-    const short tbl[256] = {
+    const unsigned short tbl[256] = {
         0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
         0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
         0xCC01, 0x0CC0, 0x0D80, 0xCD41, 0x0F00, 0xCFC1, 0xCE81, 0x0E40,
@@ -48,7 +48,7 @@ short CRC16(short crc, unsigned char data)
 short compute_CRC(unsigned char *message, int size)
 {
     int i;
-    short crc = 0;
+    unsigned short crc = 0;
     for (i = 0; i < size; i++)
     {
         crc = CRC16(crc, message[i]);

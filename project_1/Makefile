@@ -1,12 +1,12 @@
-CC = gcc
+CC = g++
 LDFLAGS =
 BLDDIR = .
 INCDIR = $(BLDDIR)/inc
 SRCDIR = $(BLDDIR)/src
 OBJDIR = $(BLDDIR)/obj
-CFLAGS = -c -g -Wall -I$(INCDIR) -std=c99
-SRC = $(wildcard $(SRCDIR)/*.c)
-OBJ = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
+CFLAGS = -c -g -Wall -I$(INCDIR) -std=c++11
+SRC = $(wildcard $(SRCDIR)/*.cpp)
+OBJ = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRC))
 EXE = bin/bin
 
 all: clean $(EXE) 
@@ -14,7 +14,7 @@ all: clean $(EXE)
 $(EXE): $(OBJ) 
 	$(CC) $(LDFLAGS) $(OBJDIR)/*.o -o $@ 
 
-$(OBJDIR)/%.o : $(SRCDIR)/%.c
+$(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
@@ -22,7 +22,7 @@ clean:
 	-rm -f $(OBJDIR)/*.o $(EXE)
 
 rasp:
-	make CC=arm-linux-gnueabihf-gcc
+	make CC=arm-linux-gnueabihf-g++
 
 send:
 	scp -P 23900 ./bin/bin  guilhermeandrade@3.tcp.ngrok.io:/home/guilhermeandrade
