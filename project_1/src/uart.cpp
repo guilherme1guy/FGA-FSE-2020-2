@@ -85,7 +85,7 @@ void uart_communication(unsigned char *data, int data_length)
             printf("\n");
 
             auto* raw_commnad = (unsigned char *)calloc(rx_length, sizeof(unsigned char));
-            std::memcpy(rx_buffer, raw_commnad, rx_length * sizeof(unsigned char));
+            std::memcpy(raw_commnad, rx_buffer, rx_length * sizeof(unsigned char));
 
             auto message = ModbusMessage::from_pointer(raw_commnad, rx_length);
 

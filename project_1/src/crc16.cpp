@@ -63,7 +63,7 @@ int validate_CRC(unsigned char *message, int size){
     short provided_crc = 0;
     
     // copy the last two bytes of the message to a local var
-    memcpy(&message[size-2], &provided_crc, sizeof(short));
+    memcpy(&provided_crc, &message[size-2], sizeof(short));
     
     // compute a new crc for the message
     short computed_crc = compute_CRC(message, size-2);
