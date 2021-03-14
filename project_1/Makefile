@@ -1,7 +1,7 @@
 CC = gcc
 CCXX = g++
 
-LDFLAGS =
+LDFLAGS = -lm -lwiringPi -lpthread -lcrypt -lrt
 BLDDIR = .
 
 INCDIR = $(BLDDIR)/inc
@@ -24,7 +24,7 @@ all:
 	make $(EXE)
 
 $(EXE): $(CXXOBJ) $(COBJ)
-	$(CCXX) $(LDFLAGS) $(OBJDIR)/*.o -o $@ 
+	$(CCXX) $(OBJDIR)/*.o -o $@  $(LDFLAGS)
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	@mkdir -p $(@D)
@@ -39,15 +39,24 @@ clean:
 	-rm -f $(OBJDIR)/*.o $(EXE)
 
 rasp:
-	make CC=arm-linux-gnueabihf-g++
+	make CC=arm-linux-gnueabihf-gcc CCXX=arm-linux-gnueabihf-g++
+
+clean-remote:
+	ssh guilhermeandrade@3.tcp.ngrok.io -p 23900 rm -rf /home/guilhermeandrade/build/
+	-ssh guilhermeandrade@3.tcp.ngrok.io -p 23900 mkdir -p /home/guilhermeandrade/build/proj1
+
+
 
 send:
-	scp -P 23900 ./bin/bin  guilhermeandrade@3.tcp.ngrok.io:/home/guilhermeandrade
+	tar -cvzf /tmp/proj1.tar.gz .
+	scp -P 23900 /tmp/proj1.tar.gz  guilhermeandrade@3.tcp.ngrok.io:/home/guilhermeandrade/build/ptoj1.tar.gz
+	ssh guilhermeandrade@3.tcp.ngrok.io -p 23900 "tar -xvzf /home/guilhermeandrade/build/ptoj1.tar.gz -C /home/guilhermeandrade/build/proj1"
 
-remote-test:
-	make rasp
+remote-build:
+	make clean
+	make clean-remote
 	make send
-	ssh guilhermeandrade@3.tcp.ngrok.io -p 23900 ./bin
+	ssh guilhermeandrade@3.tcp.ngrok.io -p 23900 "cd /home/guilhermeandrade/build/proj1; make"
 
 run:
 	./$(EXE)
