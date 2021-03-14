@@ -25,10 +25,10 @@ public:
 
     short get_crc();
 
-    tuple<unsigned char*, int> get_raw_message();
+    vector<unsigned char> get_raw_message();
 
     static void send(ModbusMessage* message);
-    static void decode(unsigned char* raw_message, int size);
+    static void decode(ModbusMessage* message);
 
     static ModbusMessage* create_request_int();
     static ModbusMessage* create_request_float();
@@ -37,6 +37,12 @@ public:
     static ModbusMessage* create_send_int(int number);
     static ModbusMessage* create_send_float(float number);
     static ModbusMessage* create_send_string(string str);
+
+    static ModbusMessage* from_pointer(unsigned char* raw_message, int size);
+
+
+    static vector<unsigned char> u_char_pointer_to_vector(unsigned char* origin, int size);
+    static unsigned char* u_char_vector_to_u_char_pointer(vector<unsigned char> origin);
 };
 
 

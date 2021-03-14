@@ -27,6 +27,33 @@ ModbusMessage::ModbusMessage(unsigned char device_address, unsigned char operati
 
 }
 
+ModbusMessage* ModbusMessage::from_pointer(unsigned char *raw_message, int size) {
+
+    // creates a early copy of the message, before any operations are made
+    auto raw_message_vector = ModbusMessage::u_char_pointer_to_vector(raw_message, size);
+
+    int is_crc_valid = validate_CRC(raw_message, size);
+
+    if (!is_crc_valid)
+    {
+        printf("Invalid CRC for received message!\n");
+        return nullptr;
+    }
+
+    int actual_data_length = (size - 4); // removes 2 bytes for op code and device address and 2 for crc
+
+    vector<unsigned char> local_data;
+    local_data.reserve(actual_data_length);
+    for(int i = 0; i < actual_data_length; i++){
+        local_data.push_back(raw_message_vector[2 + i]);
+    }
+
+    return new ModbusMessage(
+            raw_message_vector[0],
+            raw_message_vector[1],
+            local_data);
+}
+
 short ModbusMessage::get_crc() {
 
     if (this->is_crc_generated)
@@ -35,25 +62,24 @@ short ModbusMessage::get_crc() {
     }
 
     auto raw_message = this->get_raw_message();
-    short computed_crc = compute_CRC(get<0>(raw_message), get<1>(raw_message));
+    auto* message_pointer = ModbusMessage::u_char_vector_to_u_char_pointer(raw_message);
+    short computed_crc = compute_CRC(message_pointer, raw_message.size());
 
-    free(get<0>(raw_message));
+    free(message_pointer);
 
     return computed_crc;
 }
 
-tuple<unsigned char*, int> ModbusMessage::get_raw_message() {
-    // raw_message needs to be freed after its use!
+vector<unsigned char> ModbusMessage::get_raw_message() {
 
-    // using a list internally to manage byte insertion
-    std::vector<unsigned char> byte_list;
+    std::vector<unsigned char> raw_message;
 
-    byte_list.push_back(this->device_address);
-    byte_list.push_back(this->operation_code);
+    raw_message.push_back(this->device_address);
+    raw_message.push_back(this->operation_code);
 
     for (unsigned char c : this->data)
     {
-        byte_list.push_back(c);
+        raw_message.push_back(c);
     }
 
     if (this->is_crc_generated)
@@ -61,56 +87,31 @@ tuple<unsigned char*, int> ModbusMessage::get_raw_message() {
         // unsigned char crc_bytes[2];
         // memcpy(&(this->crc), &(crc_bytes), 2 * sizeof(unsigned char));
 
-        byte_list.push_back(*((unsigned char *) &(this->crc)));
-        byte_list.push_back(*(((unsigned char *) &(this->crc)) + 1));
+        raw_message.push_back(*((unsigned char *) &(this->crc)));
+        raw_message.push_back(*(((unsigned char *) &(this->crc)) + 1));
     }
 
-    // convert list to a memory region (and returns pointer)
-    auto* raw_message = (unsigned char *)calloc(byte_list.size(), sizeof (unsigned char));
-    copy(byte_list.begin(), byte_list.end(), raw_message);
-
-    return make_tuple(raw_message, byte_list.size());
+    return raw_message;
 }
 
 void ModbusMessage::send(ModbusMessage* message) {
 
-    auto raw_message_tuple = message->get_raw_message();
-    auto raw_message = get<0>(raw_message_tuple);
-    auto size = get<1>(raw_message_tuple);
+    auto raw_message = message->get_raw_message();
 
     printf("RAW: [ ");
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < raw_message.size(); i++)
     {
         printf("0x%02X ", raw_message[i]);
     }
     printf("]\n");
 
-    uart_communication(raw_message, size);
+    auto* message_pointer = ModbusMessage::u_char_vector_to_u_char_pointer(raw_message);
+    uart_communication(message_pointer, raw_message.size());
 
-    free(raw_message);
+    free(message_pointer);
 }
 
-void ModbusMessage::decode(unsigned char *raw_message, int size) {
-
-    int is_crc_valid = validate_CRC(raw_message, size);
-
-    if (!is_crc_valid)
-    {
-        printf("Invalid CRC for received message!\n");
-        return;
-    }
-
-    int actual_data_length = (size - 4); // removes 2 bytes for op code and device address and 2 for crc
-    vector<unsigned char> data;
-    for(int i = 0; i < actual_data_length; i++){
-        data.push_back(raw_message[2 + 1]);
-    }
-
-    auto interpreted_message = ModbusMessage(
-            raw_message[0],
-            raw_message[1],
-            data);
-
+void ModbusMessage::decode(ModbusMessage* message) {
 
     // preemptive variable declaration
     unsigned char int_bytes[2];
@@ -120,29 +121,29 @@ void ModbusMessage::decode(unsigned char *raw_message, int size) {
     int string_length;
     string received_string;
 
-    switch (interpreted_message.data[0])
+    switch (message->data[0])
     {
         case 0xA1:
 
-            int_bytes[0] = interpreted_message.data[2];
-            int_bytes[1] = interpreted_message.data[1];
+            int_bytes[0] = message->data[2];
+            int_bytes[1] = message->data[1];
             received_int = *((int *)&int_bytes);
             printf("Received INT: %d\n", received_int);
             break;
 
         case 0xA2:
 
-            float_bytes[0] = interpreted_message.data[2];
-            float_bytes[1] = interpreted_message.data[1];
+            float_bytes[0] = message->data[2];
+            float_bytes[1] = message->data[1];
             received_float = *((float *)&float_bytes);
             printf("Received FLOAT: %f\n", received_float);
             break;
 
         case 0xA3:
 
-            string_length = interpreted_message.data[1];
+            string_length = message->data[1];
             for (int i = 0; i < string_length; i++){
-                received_string.push_back(interpreted_message.data[1 + i]);
+                received_string.push_back(message->data[1 + i]);
             }
             cout << "Received STRING: \"" << received_string << "\"" << endl;
             break;
@@ -221,5 +222,27 @@ ModbusMessage* ModbusMessage::create_send_string(string str)
     return new ModbusMessage(0x01, 0x16, data);
 
 }
+
+vector<unsigned char> ModbusMessage::u_char_pointer_to_vector(unsigned char *origin, int size) {
+
+    vector<unsigned char> target_vector;
+    target_vector.resize(size);
+    for(int i = 0; i < size; i++){
+        target_vector.push_back(origin[i]);
+    }
+
+    return target_vector;
+}
+
+unsigned char *ModbusMessage::u_char_vector_to_u_char_pointer(vector<unsigned char> origin) {
+
+    // convert list to a memory region (and returns pointer)
+    auto* target = (unsigned char *)calloc(origin.size(), sizeof (unsigned char));
+    copy(origin.begin(), origin.end(), target);
+
+    return target;
+}
+
+
 
 

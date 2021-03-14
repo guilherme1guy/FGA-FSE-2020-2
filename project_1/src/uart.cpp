@@ -50,7 +50,9 @@ void uart_communication(unsigned char *data, int data_length)
         }
     }
 
-    sleep(3);
+    sleep(1);
+
+    bool closed_stream = false;
 
     //----- CHECK FOR ANY RX BYTES -----
     if (uart0_filestream != -1)
@@ -60,6 +62,8 @@ void uart_communication(unsigned char *data, int data_length)
         unsigned char rx_buffer[256];
 
         int rx_length = read(uart0_filestream, (void *)rx_buffer, 255); //Filestream, buffer to store in, number of bytes to read (max)
+        close(uart0_filestream); // close as early as possible
+        closed_stream = true;
 
         if (rx_length < 0)
         {
@@ -81,12 +85,18 @@ void uart_communication(unsigned char *data, int data_length)
             printf("\n");
 
             auto* raw_commnad = (unsigned char *)calloc(rx_length, sizeof(unsigned char));
-            memcpy(rx_buffer, raw_commnad, rx_length * sizeof(unsigned char));
+            std::memcpy(rx_buffer, raw_commnad, rx_length * sizeof(unsigned char));
 
-            ModbusMessage::decode(raw_commnad, rx_length);
+            auto message = ModbusMessage::from_pointer(raw_commnad, rx_length);
+
+            ModbusMessage::decode(message);
+
+            delete message;
             free(raw_commnad);
         }
     }
 
-    close(uart0_filestream);
+    if(!closed_stream){
+        close(uart0_filestream);
+    }
 }
