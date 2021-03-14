@@ -120,29 +120,29 @@ void ModbusMessage::decode(unsigned char *raw_message, int size) {
     int string_length;
     string received_string;
 
-    switch (interpreted_message.operation_code)
+    switch (interpreted_message.data[0])
     {
         case 0xA1:
 
-            int_bytes[0] = interpreted_message.data[1];
-            int_bytes[1] = interpreted_message.data[0];
+            int_bytes[0] = interpreted_message.data[2];
+            int_bytes[1] = interpreted_message.data[1];
             received_int = *((int *)&int_bytes);
             printf("Received INT: %d\n", received_int);
             break;
 
         case 0xA2:
 
-            float_bytes[0] = interpreted_message.data[1];
-            float_bytes[1] = interpreted_message.data[0];
+            float_bytes[0] = interpreted_message.data[2];
+            float_bytes[1] = interpreted_message.data[1];
             received_float = *((float *)&float_bytes);
             printf("Received FLOAT: %f\n", received_float);
             break;
 
         case 0xA3:
 
-            string_length = interpreted_message.data[0];
+            string_length = interpreted_message.data[1];
             for (int i = 0; i < string_length; i++){
-                received_string.push_back(interpreted_message.data[0]);
+                received_string.push_back(interpreted_message.data[1 + i]);
             }
             cout << "Received STRING: \"" << received_string << "\"" << endl;
             break;

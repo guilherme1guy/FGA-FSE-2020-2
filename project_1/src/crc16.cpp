@@ -60,7 +60,7 @@ int validate_CRC(unsigned char *message, int size){
     // size is the length in bytes, including the two crc bytes
     // this functions returns 0 if CRC is invalid and 1 if it is valid
 
-    short provided_crc;
+    short provided_crc = 0;
     
     // copy the last two bytes of the message to a local var
     memcpy(&message[size-2], &provided_crc, sizeof(short));
