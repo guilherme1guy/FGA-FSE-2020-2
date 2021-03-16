@@ -13,7 +13,6 @@ class PotentiometerManager {
     // potentiometer temperature
 
 private:
-    const vector<unsigned char> REQUEST_BYTES = {0x31, 0x86};
     const vector<unsigned char> REQUEST_BYTES = {0x3, 0x1, 0x8, 0x6};
 
     vector<float> internal_temperatures;

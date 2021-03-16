@@ -4,8 +4,12 @@
 #include <cstring>
 
 #include "modbus.hpp"
+#include "bme280.h"
+#include "PotentiometerManager.hpp"
 
 using namespace std;
+
+auto potentiometer = PotentiometerManager();
 
 int menu()
 {
@@ -18,6 +22,7 @@ int menu()
     printf("4 - B1 Send Int\n");
     printf("5 - B2 Send Float\n");
     printf("6 - B3 Send String\n");
+    printf("7 - C1/C2 Read Potentiometer\n");
 
     int option;
     printf("Select option:");
@@ -61,6 +66,11 @@ int menu()
         cin >> str;
         message = ModbusMessage::create_send_string(str);
         break;
+    case 7:
+        printf(
+            "Potentiometer: TI %f .... TP %f\n",
+            potentiometer.get_internal_temperature(),
+            potentiometer.get_potentiometer_temperature());
     default:
         printf("Invalid option!\n");
         break;
@@ -77,7 +87,7 @@ int menu()
             free(value);
             delete response; 
         }
-        
+
         delete message; //also frees data
     }
 
