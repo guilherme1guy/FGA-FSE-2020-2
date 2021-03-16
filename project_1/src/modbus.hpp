@@ -11,6 +11,7 @@ class ModbusMessage
 private:
     bool is_crc_generated;
 
+
 public:
     unsigned char device_address; // 1 byte
     unsigned char operation_code; // 1 byte
@@ -27,8 +28,8 @@ public:
 
     vector<unsigned char> get_raw_message();
 
-    static void send(ModbusMessage* message);
-    static void decode(ModbusMessage* message);
+    static ModbusMessage* send(ModbusMessage* message);
+    static void* decode(ModbusMessage* message);
 
     static ModbusMessage* create_request_int();
     static ModbusMessage* create_request_float();

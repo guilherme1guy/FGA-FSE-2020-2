@@ -8,7 +8,7 @@
 #include "modbus.hpp"
 
 
-void uart_communication(unsigned char *data, int data_length)
+ModbusMessage* uart_communication(unsigned char *data, int data_length)
 {
     int uart0_filestream = -1;
 
@@ -53,6 +53,7 @@ void uart_communication(unsigned char *data, int data_length)
     sleep(1);
 
     bool closed_stream = false;
+    ModbusMessage* response = nullptr;
 
     //----- CHECK FOR ANY RX BYTES -----
     if (uart0_filestream != -1)
@@ -87,11 +88,8 @@ void uart_communication(unsigned char *data, int data_length)
             auto* raw_commnad = (unsigned char *)calloc(rx_length, sizeof(unsigned char));
             std::memcpy(raw_commnad, rx_buffer, rx_length * sizeof(unsigned char));
 
-            auto message = ModbusMessage::from_pointer(raw_commnad, rx_length);
+            response = ModbusMessage::from_pointer(raw_commnad, rx_length);
 
-            ModbusMessage::decode(message);
-
-            delete message;
             free(raw_commnad);
         }
     }
@@ -99,4 +97,6 @@ void uart_communication(unsigned char *data, int data_length)
     if(!closed_stream){
         close(uart0_filestream);
     }
+
+    return response;
 }

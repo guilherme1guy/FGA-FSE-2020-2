@@ -11,7 +11,6 @@
 
 #include "crc16.hpp"
 
-
 // self include to get tModbusCommand definition
 #include "modbus.hpp"
 
@@ -94,7 +93,7 @@ vector<unsigned char> ModbusMessage::get_raw_message() {
     return raw_message;
 }
 
-void ModbusMessage::send(ModbusMessage* message) {
+ModbusMessage* ModbusMessage::send(ModbusMessage* message) {
 
     auto raw_message = message->get_raw_message();
 
@@ -105,25 +104,30 @@ void ModbusMessage::send(ModbusMessage* message) {
     }
     printf("]\n");
 
-    auto* message_pointer = ModbusMessage::u_char_vector_to_u_char_pointer(raw_message);
-    uart_communication(message_pointer, raw_message.size());
+    auto* raw_message_pointer = ModbusMessage::u_char_vector_to_u_char_pointer(raw_message);
+    ModbusMessage* response = uart_communication(raw_message_pointer, raw_message.size());
 
-    free(message_pointer);
+    free(raw_message_pointer);
+
+    return response;
 }
 
-void ModbusMessage::decode(ModbusMessage* message) {
+void* ModbusMessage::decode(ModbusMessage* message) {
+    // returns a pointer to a memory region containing the decoded data
+    // it needs to be freed after use
+    // acces should be made casting the void* to the desired type pointer
 
-    // preemptive variable declaration
-    unsigned char int_bytes[4];
-    int received_int;
-    unsigned char float_bytes[4];
-    float received_float;
-    int string_length;
-    string received_string;
+    void* decoded_data = nullptr;
 
+    // data[0] is the operation code (which implies on a data type)
+    // INT: 0xA1
+    // FLOAT: 0xA2, 0xC1, 0xC2
+    // STRING: 0xA3
     switch (message->data[0])
     {
         case 0xA1:
+
+            decoded_data = calloc(1, sizeof(int));
 
             // when receiving a message the program is not following
             // modbus standards for endianess (for ints and floats)
@@ -134,34 +138,45 @@ void ModbusMessage::decode(ModbusMessage* message) {
             for(int i = 0; i < 4; i++){
                 // for correct endian conversion:
                 // int_bytes[i] = message->data[4 - i];
-                int_bytes[i] = message->data[i + 1];
+
+                // interprest void* region as u_char to translate bytes
+                // to desired data type
+                ((unsigned char *)decoded_data)[i] = message->data[i + 1];
             }
-            received_int = *((int *)&int_bytes);
-            printf("Received INT: %d\n", received_int);
+            printf("Received INT: %d\n", *(int *)decoded_data);
             break;
 
         case 0xA2:
+        case 0xC1:
+        case 0xC2:
+
+            decoded_data = calloc(1, sizeof(float));
 
             for(int i = 0; i < 4; i++){
                 // the same thing as integers
-                float_bytes[i] = message->data[i + 1];
+                ((unsigned char *)decoded_data)[i] = message->data[i + 1];
             }
-            received_float = *((float *)&float_bytes);
-            printf("Received FLOAT: %f\n", received_float);
+
+            printf("Received FLOAT: %f\n", *(float *)decoded_data);
             break;
 
         case 0xA3:
 
-            string_length = message->data[1];
-            for (int i = 0; i < string_length; i++){
-                received_string.push_back(message->data[2 + i]);
+            decoded_data = calloc(1, sizeof(string));
+
+            // data[1] represents string length
+            for (int i = 0; i < message->data[1]; i++){
+                ((string *)decoded_data)->push_back(message->data[2 + i]);
             }
-            cout << "Received STRING: \"" << received_string << "\"" << endl;
+
+            cout << "Received STRING: \"" << *((string *)decoded_data) << "\"" << endl;
             break;
 
         default:
-            printf("Invalid operation when deconding message!\n");
+            printf("Invalid operation code when deconding message!\n");
     }
+
+    return decoded_data;
 }
 
 ModbusMessage* ModbusMessage::create_request_int()

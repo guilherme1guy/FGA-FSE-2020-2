@@ -68,7 +68,16 @@ int menu()
 
     if (message != nullptr)
     {
-        ModbusMessage::send(message);
+        auto* response = ModbusMessage::send(message);
+        
+        if (response != nullptr){
+
+            void* value = ModbusMessage::decode(response);
+            // discard value (for now)
+            free(value);
+            delete response; 
+        }
+        
         delete message; //also frees data
     }
 
