@@ -6,6 +6,7 @@
 #include "modbus.hpp"
 #include "bme280.h"
 #include "PotentiometerManager.hpp"
+#include "LCDManager.hpp"
 
 using namespace std;
 
