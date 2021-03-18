@@ -4,7 +4,7 @@
 #include <cstring>
 
 #include "modbus.hpp"
-#include "bme280.h"
+#include "BMEManager.hpp"
 #include "PotentiometerManager.hpp"
 #include "LCDManager.hpp"
 
