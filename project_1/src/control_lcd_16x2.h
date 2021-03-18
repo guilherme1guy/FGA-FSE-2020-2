@@ -1,27 +1,27 @@
-//
-// Created by gguy on 14/03/2021.
-//
-
 #ifndef PROJECT_1_CONTROL_LCD_16X2_H
 #define PROJECT_1_CONTROL_LCD_16X2_H
 
 /*! CPP guard */
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
+    int lcd_get_fd(int address);
 
-void lcd_init(void);
-void lcd_byte(int bits, int mode);
-void lcd_toggle_enable(int bits);
+    void lcd_init(int fd);
+    void lcd_byte(int bits, int mode, int fd);
+    void lcd_toggle_enable(int bits, int fd);
 
-// added by Lewis
-void typeInt(int i);
-void typeFloat(float myFloat);
-void lcdLoc(int line); //move cursor
-void ClrLcd(void); // clr LCD return home
-void typeln(const char *s);
-void typeChar(char val);
+    // added by Lewis
+    void typeInt(int i, int fd);
+    void typeFloat(float myFloat, int fd);
+    void lcdLoc(int line, int fd); //move cursor
+    void ClrLcd(int fd);           // clr LCD return home
+    void typeln(const char *s, int fd);
+    void typeChar(char val, int fd);
+
+    int get_line_location(int line_number);
 
 #ifdef __cplusplus
 }
