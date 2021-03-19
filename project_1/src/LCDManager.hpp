@@ -20,6 +20,8 @@ private:
 
     void write_line(int line, string text);
 
+    int get_fd();
+
 public:
 
     LCDManager();
