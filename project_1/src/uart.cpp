@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "modbus.hpp"
+#include "Logger.h"
 
 
 ModbusMessage* uart_communication(unsigned char *data, int data_length)
@@ -16,11 +17,11 @@ ModbusMessage* uart_communication(unsigned char *data, int data_length)
 
     if (uart0_filestream == -1)
     {
-        printf("Error - Unable to initialize UART.\n");
+        Logger::log_to_screen("Error - Unable to initialize UART.");
     }
     else
     {
-        printf("UART initialized!\n");
+        Logger::log_to_screen("UART initialized!");
     }
 
     struct termios options;
@@ -34,19 +35,19 @@ ModbusMessage* uart_communication(unsigned char *data, int data_length)
     tcflush(uart0_filestream, TCIFLUSH);
     tcsetattr(uart0_filestream, TCSANOW, &options);
 
-    printf("Memory buffers created!\n");
+    Logger::log_to_screen("Memory buffers created!");
 
     if (uart0_filestream != -1)
     {
-        printf("Writing characters to UART ...");
+        Logger::log_to_screen("Writing characters to UART ...");
         int count = write(uart0_filestream, &data[0], data_length);
         if (count < 0)
         {
-            printf("UART TX error\n");
+            Logger::log_to_screen("UART TX error");
         }
         else
         {
-            printf("Done writing.\n");
+            Logger::log_to_screen("Done writing.");
         }
     }
 
@@ -68,22 +69,25 @@ ModbusMessage* uart_communication(unsigned char *data, int data_length)
 
         if (rx_length < 0)
         {
-            printf("Reading error.\n"); //An error occured (will occur if there are no bytes)
+            Logger::log_to_screen("Reading error."); //An error occured (will occur if there are no bytes)
         }
         else if (rx_length == 0)
         {
-            printf("No data available.\n"); //No data waiting
+            Logger::log_to_screen("No data available."); //No data waiting
         }
         else
         {
             //Bytes received
             rx_buffer[rx_length] = '\0';
-            printf("%i Bytes read : ", rx_length);
+            string log = to_string(rx_length) + " Bytes read : ";
             for (int i = 0; i < rx_length; i++)
             {
-                printf("0x%02X ", rx_buffer[i]);
+                char local_text[6];
+                sprintf(local_text, "0x%02X ", rx_buffer[i]);
+
+                log += local_text;
             }
-            printf("\n");
+            Logger::log_to_screen(log);
 
             auto* raw_commnad = (unsigned char *)calloc(rx_length, sizeof(unsigned char));
             std::memcpy(raw_commnad, rx_buffer, rx_length * sizeof(unsigned char));

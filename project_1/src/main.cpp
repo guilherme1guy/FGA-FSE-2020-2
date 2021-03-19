@@ -7,6 +7,7 @@
 #include "BMEManager.hpp"
 #include "PotentiometerManager.hpp"
 #include "LCDManager.hpp"
+#include "Logger.h"
 
 using namespace std;
 

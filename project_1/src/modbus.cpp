@@ -6,10 +6,13 @@
 #include <tuple>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 #include "uart.hpp"
 
 #include "crc16.hpp"
+
+#include "Logger.h"
 
 // self include to get tModbusCommand definition
 #include "modbus.hpp"
@@ -35,7 +38,7 @@ ModbusMessage* ModbusMessage::from_pointer(unsigned char *raw_message, int size)
 
     if (!is_crc_valid)
     {
-        printf("Invalid CRC for received message!\n");
+        Logger::log_to_screen("Invalid CRC for received message!");
         return nullptr;
     }
 
@@ -97,12 +100,20 @@ ModbusMessage* ModbusMessage::send(ModbusMessage* message) {
 
     auto raw_message = message->get_raw_message();
 
-    printf("RAW: [ ");
+    stringstream log;
+    log << "RAW: [ ";
+
     for (int i = 0; i < raw_message.size(); i++)
     {
-        printf("0x%02X ", raw_message[i]);
+        
+        char local_text[6]; 
+        sprintf(local_text, "0x%02X ", raw_message[i]);
+        log << local_text;
+        
     }
-    printf("]\n");
+    log << "]";
+
+    Logger::log_to_screen(log.str());
 
     auto* raw_message_pointer = ModbusMessage::u_char_vector_to_u_char_pointer(raw_message);
     ModbusMessage* response = uart_communication(raw_message_pointer, raw_message.size());
@@ -118,6 +129,7 @@ void* ModbusMessage::decode(ModbusMessage* message) {
     // acces should be made casting the void* to the desired type pointer
 
     void* decoded_data = nullptr;
+    string log;
 
     // data[0] is the operation code (which implies on a data type)
     // INT: 0xA1
@@ -143,7 +155,8 @@ void* ModbusMessage::decode(ModbusMessage* message) {
                 // to desired data type
                 ((unsigned char *)decoded_data)[i] = message->data[i + 1];
             }
-            printf("Received INT: %d\n", *(int *)decoded_data);
+            log = "Received INT: " + to_string(*(int *)decoded_data);
+            Logger::log_to_screen(log);
             break;
 
         case 0xA2:
@@ -157,7 +170,8 @@ void* ModbusMessage::decode(ModbusMessage* message) {
                 ((unsigned char *)decoded_data)[i] = message->data[i + 1];
             }
 
-            printf("Received FLOAT: %f\n", *(float *)decoded_data);
+            log = "Received FLOAT: " + to_string(*(float *)decoded_data);
+            Logger::log_to_screen(log);
             break;
 
         case 0xA3:
@@ -169,11 +183,12 @@ void* ModbusMessage::decode(ModbusMessage* message) {
                 ((string *)decoded_data)->push_back(message->data[2 + i]);
             }
 
-            cout << "Received STRING: \"" << *((string *)decoded_data) << "\"" << endl;
+            log = "Received STRING: \"" + *((string *)decoded_data);
+            Logger::log_to_screen(log);
             break;
 
         default:
-            printf("Invalid operation code when deconding message!\n");
+            Logger::log_to_screen("Invalid operation code when deconding message!");
     }
 
     return decoded_data;
