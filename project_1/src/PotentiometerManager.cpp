@@ -4,10 +4,6 @@
 
 #include <vector>
 
-PotentiometerManager::PotentiometerManager()
-{
-}
-
 float PotentiometerManager::update_temperature(unsigned char operation_code, vector<float> *save_vector)
 {
 

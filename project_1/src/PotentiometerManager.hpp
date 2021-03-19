@@ -21,7 +21,7 @@ private:
     float update_temperature(unsigned char operation_code, vector<float>* save_vector);
 
 public:
-    PotentiometerManager();
+    PotentiometerManager() = default;
 
     vector<float> get_all_internal_temperatures();
     vector<float> get_all_potentiometer_temperatures();
