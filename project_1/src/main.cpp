@@ -12,6 +12,7 @@
 using namespace std;
 
 auto potentiometer = PotentiometerManager();
+auto bme_manager = BMEManager();
 
 int menu()
 {
@@ -25,6 +26,7 @@ int menu()
     printf("5 - B2 Send Float\n");
     printf("6 - B3 Send String\n");
     printf("7 - C1/C2 Read Potentiometer\n");
+    printf("8 - Read BME\n");
 
     int option;
     printf("Select option:");
@@ -36,6 +38,8 @@ int menu()
     int i_number;
     float f_number;
     string str;
+
+    tuple<float, float, float> bme_data;
 
     switch (option)
     {
@@ -73,6 +77,11 @@ int menu()
             "Potentiometer: TI %f .... TP %f\n",
             potentiometer.get_internal_temperature(),
             potentiometer.get_potentiometer_temperature());
+        break;
+    case 8:
+        bme_data = bme_manager.get_data();
+        printf("BME: T %f // P %f // H %f", get<0>(bme_data), get<1>(bme_data), get<2>(bme_data));
+        break;
     default:
         printf("Invalid option!\n");
         break;

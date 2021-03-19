@@ -8,15 +8,15 @@ using namespace std;
 
 class BMEManager {
 
-    void open_device();
+    int open_device();
 
     // temperature, pression, humidity
     tuple<float, float, float> read_from_device();
 
 public:
-    BMEManager();
+    BMEManager() = default;
 
-
+    tuple<float, float, float> get_data();
 };
 
 

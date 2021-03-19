@@ -2,17 +2,16 @@
 
 #include "BMEManager.hpp"
 
+#include <tuple>
+
 #include "bme280.h"
+#include "Logger.h"
 
 using namespace std;
 
 
-void BMEManager::open_device() {
-    int opened = bme280Init(1, 0x76);
-
-    if (!opened){
-        //error
-    }
+int BMEManager::open_device() {
+    return bme280Init(1, 0x76);
 }
 
 tuple<float, float, float> BMEManager::read_from_device() {
@@ -28,4 +27,16 @@ tuple<float, float, float> BMEManager::read_from_device() {
     humidity = (float) i_humidity / 1024.0;
 
     return make_tuple(temperature, pressure, humidity);
+}
+
+tuple<float, float, float> BMEManager::get_data() {
+
+    int open_status = open_device();
+
+    if (open_status != 0){
+        Logger::log_to_screen("Error openning BME!");
+        return make_tuple(0.0, 0.0, 0.0);
+    }
+
+    return read_from_device();    
 }
