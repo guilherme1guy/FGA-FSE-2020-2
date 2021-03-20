@@ -3,6 +3,7 @@
 #include <ctime>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <stdexcept>
 #include <ncurses.h>
 
@@ -20,8 +21,13 @@ Logger::Logger(){
 
 string Logger::get_prefix()
 {
-    string prefix = "[ " + get_formated_date() + " ] --- ";
-    return prefix;
+    stringstream s_prefix;
+
+    s_prefix << "[";
+    s_prefix << get_formated_date();
+    s_prefix << "] ";
+
+    return s_prefix.str();
 }
 
 string Logger::get_formated_date()
