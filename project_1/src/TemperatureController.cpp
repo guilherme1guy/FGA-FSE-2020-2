@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <cstdio>
 
 #include "TemperatureController.hpp"
 #include "LCDManager.hpp"
@@ -16,6 +17,16 @@ using namespace std;
 
 void TemperatureController::update_lcd()
 {
+
+    char buffer[80];
+
+    sprintf(buffer, "TI %.2f TE %.2f", this->get_internal_temperature(), this->get_external_temperature());
+    auto line1 = to_string(buffer);
+
+    sprintf(buffer, "TR %.2f", this->get_reference_temperature());
+    auto line2 = "TR ";
+
+    this->lcd->write_on_screen(line1, line2);
 }
 
 void TemperatureController::compute_pid()
@@ -98,12 +109,19 @@ TemperatureController::TemperatureController()
 
     this->potentiometer = new PotentiometerManager();
     this->bme = new BMEManager();
+    this->lcd = new LCDManager();
 
     this->reference_source = REFERENCE_FROM_SENSOR;
 
     // populate initial data
     this->update_data();
     this->last_time = time(nullptr);
+}
+
+TemperatureController::~TemperatureController() {
+    delete this->potentiometer;
+    delete this->bme;
+    delete this->lcd;
 }
 
 void TemperatureController::execute_temperature_control(){
@@ -209,3 +227,5 @@ float TemperatureController::get_reference_temperature() const {
 float TemperatureController::get_temperature_adjustment() const {
     return temperature_adjustment;
 }
+
+

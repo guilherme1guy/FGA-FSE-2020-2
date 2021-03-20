@@ -70,6 +70,7 @@ public:
     float get_temperature_adjustment() const;
 
     TemperatureController();
+    ~TemperatureController();
 
     void start();
     void end();
