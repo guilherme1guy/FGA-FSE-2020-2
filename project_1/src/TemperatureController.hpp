@@ -1,5 +1,5 @@
-#ifndef PROJECT_1_TEMPERATURECONTROLLER_H
-#define PROJECT_1_TEMPERATURECONTROLLER_H
+#ifndef PROJECT_1_TEMPERATURECONTROLLER_HPP
+#define PROJECT_1_TEMPERATURECONTROLLER_HPP
 
 #include <chrono>
 #include <ctime>
@@ -46,8 +46,6 @@ private:
     static const int REFERENCE_FROM_SENSOR = 1;
     static const int REFERENCE_FROM_USER = 2;
 
-    
-
     PotentiometerManager* potentiometer;
     BMEManager* bme;
     LCDManager* lcd;
@@ -75,4 +73,4 @@ public:
 };
 
 
-#endif //PROJECT_1_TEMPERATURECONTROLLER_H
+#endif //PROJECT_1_TEMPERATURECONTROLLER_HPP

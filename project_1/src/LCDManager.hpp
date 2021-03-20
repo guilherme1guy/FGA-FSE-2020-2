@@ -1,7 +1,3 @@
-//
-// Created by gguy on 18/03/2021.
-//
-
 #ifndef PROJECT_1_LCDMANAGER_HPP
 #define PROJECT_1_LCDMANAGER_HPP
 

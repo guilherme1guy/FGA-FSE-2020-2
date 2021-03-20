@@ -6,10 +6,7 @@
 
 #include "Program.hpp"
 
-#include "PotentiometerManager.hpp"
-#include "LCDManager.hpp"
-#include "BMEManager.hpp"
-#include "modbus.hpp"
+#include "TemperatureController.hpp"
 
 using namespace std;
 

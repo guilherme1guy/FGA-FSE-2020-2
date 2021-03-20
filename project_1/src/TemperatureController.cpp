@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "TemperatureController.h"
+#include "TemperatureController.hpp"
 #include "LCDManager.hpp"
 #include "Logger.h"
 #include "GPIOManager.h"

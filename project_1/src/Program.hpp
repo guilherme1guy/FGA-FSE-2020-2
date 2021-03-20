@@ -1,9 +1,7 @@
 #ifndef PROJECT_1_PROGRAM_H
 #define PROJECT_1_PROGRAM_H
 
-#include "PotentiometerManager.hpp"
-#include "LCDManager.hpp"
-#include "BMEManager.hpp"
+#include "TemperatureController.hpp"
 
 using namespace std;
 
