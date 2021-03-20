@@ -4,8 +4,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
-#include <stdexcept>
-#include <ncurses.h>
+#include <fstream>
 
 #include "Logger.h"
 
@@ -17,7 +16,26 @@ Logger::Logger(){
     for(int i = 0; i < MAX_LOG_LINES; i++){
         this->log_lines.push_back("\n");
     }
+
+    this->writer_thread = new thread(&Logger::writer_execute, this);
 }
+
+Logger::~Logger() {
+
+    this->execute = false;
+    this->writer_thread->join();
+
+}
+
+void Logger::writer_execute() {
+
+    while(execute){
+        flush_file_buffer();
+
+        this_thread::sleep_for(chrono::seconds(1));
+    }
+}
+
 
 string Logger::get_prefix()
 {
@@ -63,16 +81,37 @@ void Logger::log_to_screen(string log_text)
 
 void Logger::log_to_file(string text)
 {
+    Logger::file_buffer_lock.lock();
     get_instance().file_buffer.push(text);
+    Logger::file_buffer_lock.unlock();
+}
+
+
+void Logger::flush_file_buffer() {
+
+    ofstream file;
+    file.open("log.csv", ios::app);
+
+    Logger::file_buffer_lock.lock();
+
+    while (!get_instance().file_buffer.empty()){
+        string line = get_instance().file_buffer.front();
+        get_instance().file_buffer.pop();
+
+        file << line;
+    }
+
+    Logger::file_buffer_lock.unlock();
+
 }
 
 void Logger::end_logger()
 {
-
-    // TODO: flush remaining file_buffer to file
-   
+    flush_file_buffer();
 }
 
 list<string> Logger::get_log_lines(){
     return get_instance().log_lines;
 }
+
+
