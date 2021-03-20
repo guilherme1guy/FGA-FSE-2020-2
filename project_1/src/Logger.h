@@ -31,7 +31,7 @@ private:
     static Logger &get_instance();
 
 protected:
-    static mutex file_buffer_lock;
+    mutex* file_buffer_lock;
 
 public:
     // src: https://github.com/hnrck/singleton_example

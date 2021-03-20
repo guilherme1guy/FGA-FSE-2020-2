@@ -18,13 +18,13 @@ using namespace std;
 void TemperatureController::update_lcd()
 {
 
-    char buffer[80];
+    char buffer[50] = {0};
 
-    sprintf(buffer, "TI %.2f TE %.2f", this->get_internal_temperature(), this->get_external_temperature());
-    auto line1 = to_string(buffer);
+    sprintf(&(buffer[0]), "TI %.2f TE %.2f", this->get_internal_temperature(), this->get_external_temperature());
+    auto line1 = string(buffer);
 
-    sprintf(buffer, "TR %.2f", this->get_reference_temperature());
-    auto line2 = "TR ";
+    sprintf(&(buffer[0]), "TR %.2f", this->get_reference_temperature());
+    auto line2 = string(buffer);
 
     this->lcd->write_on_screen(line1, line2);
 }

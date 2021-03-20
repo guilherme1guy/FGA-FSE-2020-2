@@ -17,6 +17,8 @@ Logger::Logger(){
         this->log_lines.push_back("\n");
     }
 
+    Logger::file_buffer_lock = new mutex();
+
     this->writer_thread = new thread(&Logger::writer_execute, this);
 }
 
@@ -24,6 +26,8 @@ Logger::~Logger() {
 
     this->execute = false;
     this->writer_thread->join();
+
+    delete Logger::file_buffer_lock;
 
 }
 
@@ -81,9 +85,9 @@ void Logger::log_to_screen(string log_text)
 
 void Logger::log_to_file(string text)
 {
-    Logger::file_buffer_lock.lock();
+    get_instance().file_buffer_lock->lock();
     get_instance().file_buffer.push(text);
-    Logger::file_buffer_lock.unlock();
+    get_instance().file_buffer_lock->unlock();
 }
 
 
@@ -92,7 +96,7 @@ void Logger::flush_file_buffer() {
     ofstream file;
     file.open("log.csv", ios::app);
 
-    Logger::file_buffer_lock.lock();
+    get_instance().file_buffer_lock->lock();
 
     while (!get_instance().file_buffer.empty()){
         string line = get_instance().file_buffer.front();
@@ -101,7 +105,7 @@ void Logger::flush_file_buffer() {
         file << line;
     }
 
-    Logger::file_buffer_lock.unlock();
+    get_instance().file_buffer_lock->unlock();
 
 }
 
