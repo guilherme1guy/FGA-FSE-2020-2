@@ -152,5 +152,7 @@ void Program::quit()
 {
 
     this->temperature_controller->end();
+    Logger::end_logger();
+    
     endwin();
 }
