@@ -4,11 +4,19 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <ncurses.h>
 
 #include "Logger.h"
 
 using namespace std;
 
+
+Logger::Logger(){
+
+    for(int i = 0; i < MAX_LOG_LINES; i++){
+        this->log_lines.push_back("\n");
+    }
+}
 
 string Logger::get_prefix()
 {
@@ -36,7 +44,14 @@ Logger &Logger::get_instance() {
 void Logger::log_to_screen(string log_text)
 {
 
-    cout << get_prefix() + log_text + '\n';
+    string s = get_prefix() + log_text + '\n';
+    
+    auto *v = &(get_instance().log_lines);
+    v->push_back(s);
+
+    while (v->size() > Logger::MAX_LOG_LINES){
+        v->pop_front();
+    }
 }
 
 void Logger::log_to_file(string text)
@@ -49,4 +64,8 @@ void Logger::end_logger()
 
     // TODO: flush remaining file_buffer to file
    
+}
+
+list<string> Logger::get_log_lines(){
+    return get_instance().log_lines;
 }

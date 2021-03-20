@@ -3,6 +3,7 @@
 
 #include <string>
 #include <queue>
+#include <list>
 
 using namespace std;
 
@@ -10,10 +11,13 @@ class Logger final {
 
 private:
     queue<string> file_buffer;
+    list<string> log_lines;
+
+    static const int MAX_LOG_LINES = 25;
 
     static Logger* instance_;
 
-    Logger() = default;
+    Logger();
 
     static string get_prefix();
     static string get_formated_date();
@@ -34,6 +38,8 @@ public:
 
     static void flush_file_buffer();
     static void end_logger();
+
+    static list<string> get_log_lines();
 
 };
 
