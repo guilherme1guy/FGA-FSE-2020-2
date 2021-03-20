@@ -11,6 +11,7 @@
 #include "TemperatureController.h"
 #include "LCDManager.hpp"
 #include "Logger.h"
+#include "GPIOManager.h"
 
 using namespace std;
 
@@ -83,7 +84,7 @@ tuple<int, int> TemperatureController::get_activation_values(){
     if (this->temperature_adjustment < 0){
         // turn on the resistor to heat up
         // the resistor has a range of 0% to 100%
-        resistor = this->clamp(0, 100, (int) round(this->temperature_adjustment * -1)
+        resistor = this->clamp(0, 100, (int) round(this->temperature_adjustment * -1));
     }else{
         // turn on the fan to cool down
         // the fan has a range of 40% to 100%
@@ -119,6 +120,8 @@ void TemperatureController::execute_temperature_control(){
     
     bool save_csv = false;
 
+    GPIOManager *gpio = new GPIOManager();
+
     while (this->execute)
     {
         Logger::log_to_screen("Temperature control iteration");
@@ -127,8 +130,9 @@ void TemperatureController::execute_temperature_control(){
         compute_pid();
 
         auto activation_percentages = this->get_activation_values();
-
-        //TODO: take action based on pid
+        
+        gpio->set_value(GPIOManager::GPIO_RESISTOR_PIN, get<0>(activation_percentages));
+        gpio->set_value(GPIOManager::GPIO_FAN_PIN, get<1>(activation_percentages));
 
         if (save_csv){
             save_csv = false;

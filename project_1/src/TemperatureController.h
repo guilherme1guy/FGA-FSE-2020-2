@@ -10,6 +10,7 @@
 #include "PotentiometerManager.hpp"
 #include "BMEManager.hpp"
 #include "LCDManager.hpp"
+#include "GPIOManager.h"
 
 using namespace std;
 
