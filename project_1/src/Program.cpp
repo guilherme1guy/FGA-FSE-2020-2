@@ -4,131 +4,153 @@
 #include <cstring>
 #include <thread>
 
+#include <ncurses.h>
+
 #include "Program.hpp"
 
+#include "Logger.h"
 #include "TemperatureController.hpp"
 
 using namespace std;
 
-Program::Program() {
-    this->potentiometer = new PotentiometerManager();
-    this->bme_manager = new BMEManager();
-    //lcd_manager = new LCDManager();
+Program::Program()
+{
+    this->temperature_controller = new TemperatureController();
 }
 
-Program::~Program(){
-    delete this->potentiometer;
-    delete this->bme_manager;
-    // delete this->lcd_manager;
+Program::~Program()
+{
+    // TODO: call method to safely stop temperature_controller
+    delete temperature_controller;
 }
 
-int Program::menu()
+void Program::draw_logs()
+{
+    auto lines = Logger::get_log_lines();
+
+    for (auto line : lines)
+    {
+        printw(line.c_str());
+    }
+}
+
+void Program::draw_information()
+{
+    printw(
+        "IT %.2f ET %.2f RT %.2f PID %.2f\n",
+        this->temperature_controller->get_internal_temperature(),
+        this->temperature_controller->get_external_temperature(),
+        this->temperature_controller->get_reference_temperature(),
+        this->temperature_controller->get_temperature_adjustment());
+}
+
+void Program::draw_division()
+{
+    printw("-------------------------------\n");
+}
+
+void Program::menu()
 {
 
-    cout << "\n\n\n-------------------------------\n";
-    cout << "0 - Exit\n";
-    cout << "1 - A1 Request Int\n";
-    cout << "2 - A2 Request Float\n";
-    cout << "3 - A3 Request String\n";
-    cout << "4 - B1 Send Int\n";
-    cout << "5 - B2 Send Float\n";
-    cout << "6 - B3 Send String\n";
-    cout << "7 - C1/C2 Read Potentiometer\n";
-    cout << "8 - Read BME\n";
+    initscr();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+    nonl();
+    cbreak();
+    echo();
 
-    int option;
-    printf("Select option:");
-    cin >> option;
-
-    ModbusMessage *message = nullptr;
-
-    // variables used inside switch statement
-    int i_number;
-    float f_number;
-    string str;
-
-    tuple<float, float, float> bme_data;
-
-    string line1;
-    string line2;
-
-    switch (option)
+    if (has_colors())
     {
-    case 0:
-        printf("Exiting...\n");
-        return -1;
-    case 1:
-        message = ModbusMessage::create_request_int();
-        break;
-    case 2:
-        message = ModbusMessage::create_request_float();
-        break;
-    case 3:
-        message = ModbusMessage::create_request_string();
-        break;
-    case 4:
-        printf("Insert Integer: ");
-        cin >> i_number;
-        message = ModbusMessage::create_send_int(i_number);
-        break;
-    case 5:
-        printf("Insert Float: ");
-        cin >> f_number;
-        message = ModbusMessage::create_send_float(f_number);
-        break;
-    case 6:
-        printf("Insert String: ");
-        //clear input buffer
-        while ((getchar()) != '\n');
-        cin >> str;
-        message = ModbusMessage::create_send_string(str);
-        break;
-    case 7:
-        printf(
-            "Potentiometer: TI %f .... TP %f\n",
-            potentiometer->get_internal_temperature(),
-            potentiometer->get_potentiometer_temperature());
-        break;
-    case 8:
-        bme_data = bme_manager->get_data();
-        printf("BME: T %f // P %f // H %f", get<0>(bme_data), get<1>(bme_data), get<2>(bme_data));
-        break;
-    case 9:
-        cout << "Write line 1\n >";
-        cin >> line1;
-        cout << "Write line 2\n >";
-        cin >> line2;
+        start_color();
 
-        //lcd_manager->write_on_screen(line1, line2);
-    default:
-        printf("Invalid option!\n");
-        break;
+        init_pair(1, COLOR_RED, COLOR_BLACK);
+        init_pair(2, COLOR_GREEN, COLOR_BLACK);
+        init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+        init_pair(4, COLOR_BLUE, COLOR_BLACK);
+        init_pair(5, COLOR_CYAN, COLOR_BLACK);
+        init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(7, COLOR_WHITE, COLOR_BLACK);
     }
 
-    if (message != nullptr)
-    {
-        auto* response = ModbusMessage::send(message);
-        
-        if (response != nullptr){
+    bool temperature_set = false;
+    string temperature_chars = "";
 
-            void* value = ModbusMessage::decode(response);
-            // discard value (for now)
-            free(value);
-            delete response; 
+    for (;;)
+    {
+        clear();
+        move(1, 1);
+
+        draw_logs();
+        draw_division();
+        
+        draw_information();
+        draw_division();
+
+        int c = getch(); /* refresh, accept single keystroke of input */
+
+        if (temperature_set)
+        {
+
+            printw("Input desired temperature. A negative value will set it to sensor mode.\n");
+            printw("Press ENTER when done.\n");
+            printw("> %s", temperature_chars.c_str());
+            if (c == '\n' || c == 13) // 13 is carriage return char
+            {
+                try
+                {
+
+                    float temperature = stof(temperature_chars);
+                    if (temperature > 100)
+                        temperature = 100.0;
+
+                    this->temperature_controller->set_reference_temperature(temperature);
+                    temperature_chars = "";
+                    temperature_set = false;
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << e.what() << '\n';
+
+                    temperature_chars = "";
+                }
+            }
+            else if (c != -1)
+            {
+                temperature_chars += c;
+            }
+        }
+        else
+        {
+            printw("Commands: q - Exit // s - Set Reference Temperature\n");
+            printw("> ");
+
+            if (c == 'q')
+            {
+                break;
+            }
+            else if (c == 's')
+            {
+                temperature_set = true;
+            }
         }
 
-        delete message; //also frees data
-    }
+        draw_division();
 
-    return 0;
+        refresh();
+
+        this_thread::sleep_for(chrono::milliseconds(50));
+    }
 }
 
-void Program::run(){
+void Program::run()
+{
+    this->temperature_controller->start();
+    menu();
+}
 
-    int menu_result = 0;
-    while (menu_result == 0)
-    {
-        menu_result = menu();
-    }
+void Program::quit()
+{
 
+    this->temperature_controller->end();
+    endwin();
 }

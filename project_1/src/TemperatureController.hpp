@@ -64,6 +64,11 @@ private:
 
 public:
 
+    float get_internal_temperature() const;
+    float get_external_temperature() const;
+    float get_reference_temperature() const;
+    float get_temperature_adjustment() const;
+
     TemperatureController();
 
     void start();

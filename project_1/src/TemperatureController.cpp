@@ -193,3 +193,19 @@ void TemperatureController::set_reference_temperature(float temperature)
         this->reference_source = REFERENCE_FROM_SENSOR;
     }
 }
+
+float TemperatureController::get_internal_temperature() const {
+    return internal_temperature;
+}
+
+float TemperatureController::get_external_temperature() const {
+    return external_temperature;
+}
+
+float TemperatureController::get_reference_temperature() const {
+    return reference_temperature;
+}
+
+float TemperatureController::get_temperature_adjustment() const {
+    return temperature_adjustment;
+}

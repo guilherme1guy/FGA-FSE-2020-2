@@ -9,12 +9,13 @@ class Program{
 
 private:
 
-    PotentiometerManager* potentiometer; 
-    BMEManager* bme_manager; 
-    LCDManager* lcd_manager;
+    TemperatureController* temperature_controller;
 
-    int menu();
+    void menu();
 
+    void draw_logs();
+    void draw_division();
+    void draw_information();
 
 public:
 
@@ -22,6 +23,7 @@ public:
     ~Program();
 
     void run();
+    void quit();
 
 };
 
