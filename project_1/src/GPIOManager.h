@@ -7,8 +7,6 @@ using namespace std;
 
 class GPIOManager{
 
-    set<int> pins_set;
-
 public:
 
     static const int GPIO_RESISTOR_PIN = 23;

@@ -49,11 +49,12 @@ Logger &Logger::get_instance() {
 
 void Logger::log_to_screen(string log_text)
 {
-
-    string s = get_prefix() + log_text + '\n';
+    stringstream s;
+    s << get_prefix();
+    s << log_text << '\n';
     
     auto *v = &(get_instance().log_lines);
-    v->push_back(s);
+    v->push_back(s.str());
 
     while (v->size() > Logger::MAX_LOG_LINES){
         v->pop_front();

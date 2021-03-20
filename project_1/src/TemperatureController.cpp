@@ -3,10 +3,9 @@
 #include <chrono>
 #include <ctime>
 #include <future>
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <sstream>
-#include <iomanip>
 
 #include "TemperatureController.hpp"
 #include "LCDManager.hpp"
@@ -22,9 +21,9 @@ void TemperatureController::update_lcd()
 void TemperatureController::compute_pid()
 {
     time_t now = time(nullptr);
-    auto delta_time = difftime(now, last_time);
+    float delta_time = difftime(now, last_time);
 
-    auto error = this->reference_temperature - this->internal_temperature;
+    float error = this->reference_temperature - this->internal_temperature;
     this->error_sum += (error * delta_time);              //integral
     auto delta_error = (error - last_error) / delta_time; // derivative
 
@@ -65,7 +64,7 @@ int TemperatureController::clamp(int min, int max, int value){
     int final_value;
 
     if (value < min){
-        final_value = value;
+        final_value = min;
     }else if (value > max){
         final_value = max;
     }else{
@@ -116,11 +115,11 @@ void TemperatureController::execute_temperature_control(){
         // - update the lcd
         // - run pid
     // every 2 seconds:
-        // - save csv with: datetime, internal temperature, external temperature, user temeprature, resistor %, fan %)
+        // - save csv with: datetime, internal temperature, external temperature, user temperature, resistor %, fan %)
     
     bool save_csv = false;
 
-    GPIOManager *gpio = new GPIOManager();
+    auto* gpio = new GPIOManager();
 
     while (this->execute)
     {
