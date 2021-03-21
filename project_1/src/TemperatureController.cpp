@@ -129,7 +129,7 @@ void TemperatureController::execute_temperature_control(){
     Logger::log_to_screen("Starting temperature control");
 
     // each iteration represents a second
-    // every 1 seconds:
+    // every 1 second:
         // - update the lcd
         // - run pid
     // every 2 seconds:
@@ -139,6 +139,8 @@ void TemperatureController::execute_temperature_control(){
 
     auto* gpio = new GPIOManager();
 
+
+    time_t last_execution_time = time(nullptr);
     while (this->execute)
     {
         Logger::log_to_screen("Temperature control iteration");
@@ -150,6 +152,12 @@ void TemperatureController::execute_temperature_control(){
         
         gpio->set_value(GPIOManager::GPIO_RESISTOR_PIN, get<0>(activation_percentages));
         gpio->set_value(GPIOManager::GPIO_FAN_PIN, get<1>(activation_percentages));
+
+        
+        time_t now = time(nullptr);
+        if (now - last_execution_time >= 2){
+            save_csv = true;   
+        }
 
         if (save_csv){
             save_csv = false;
