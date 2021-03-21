@@ -1,3 +1,7 @@
+#include <thread>
+#include <string>
+#include <chrono>
+
 #include "LCDManager.hpp"
 #include "control_lcd_16x2.h"
 #include "Logger.h"
@@ -8,6 +12,29 @@ LCDManager::LCDManager()
 {
     this->fd = -1;
     get_fd();
+
+    this->execute = true;
+    this->execution_thread = new thread(&LCDManager::execution_loop, this);
+}
+
+LCDManager::~LCDManager(){
+
+    this->execute = false;
+    this->execution_thread->join();
+
+    ClrLcd(get_fd());
+
+    delete this->execution_thread;
+}
+
+void LCDManager::execution_loop(){
+
+    while (this->execute){
+        this_thread::sleep_for(chrono::milliseconds(500));
+
+        this->_write_on_screen();
+    }
+
 }
 
 int LCDManager::get_fd()
@@ -43,11 +70,18 @@ void LCDManager::write_line(int line, string text)
     typeln(cstr, get_fd());
 }
 
+
+void LCDManager::_write_on_screen()
+{
+    write_line(1, line1);
+    write_line(2, line2);
+}
+
+
 void LCDManager::write_on_screen(string line1, string line2)
 {
     // use an empty string when the line is not needed
 
-    ClrLcd(get_fd());
-    write_line(1, line1);
-    write_line(2, line2);
+    this->line1 = line1;
+    this->line2 = line2;
 }
