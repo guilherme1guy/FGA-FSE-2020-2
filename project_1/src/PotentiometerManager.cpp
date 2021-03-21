@@ -4,7 +4,7 @@
 
 #include <vector>
 
-float PotentiometerManager::update_temperature(unsigned char operation_code, vector<float> *save_vector)
+float PotentiometerManager::update_temperature(unsigned char operation_code)
 {
 
     vector<unsigned char> data;
@@ -26,31 +26,18 @@ float PotentiometerManager::update_temperature(unsigned char operation_code, vec
     float _local_received_data = *received_data; // copy pointer value to local var
     free(received_data);                         // received data needs to be freed
 
-    // saves received temperature on a temperature vector
-    save_vector->push_back(_local_received_data);
-
     // request is automatically deleted (cpp mem management)
     delete response;
 
     return _local_received_data;
 }
 
-vector<float> PotentiometerManager::get_all_internal_temperatures()
-{
-    return this->internal_temperatures;
-}
-
-vector<float> PotentiometerManager::get_all_potentiometer_temperatures()
-{
-    return this->potentiometer_temperatures;
-}
-
 float PotentiometerManager::get_internal_temperature()
 {
-    return this->update_temperature(0xc1, &this->internal_temperatures);
+    return this->update_temperature(0xC1);
 }
 
 float PotentiometerManager::get_potentiometer_temperature()
 {
-    return this->update_temperature(0xc2, &this->potentiometer_temperatures);
+    return this->update_temperature(0xC2);
 }

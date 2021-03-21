@@ -126,12 +126,9 @@ void TemperatureController::execute_temperature_control(){
     // every 2 seconds:
         // - save csv with: datetime, internal temperature, external temperature, user temperature, resistor %, fan %)
     
-    bool save_csv = false;
-
     auto* gpio = new GPIOManager();
 
-
-    time_t last_execution_time = time(nullptr);
+    time_t last_csv_save = time(nullptr);
     while (this->execute)
     {
         Logger::log_to_screen("Temperature control iteration");
@@ -146,13 +143,9 @@ void TemperatureController::execute_temperature_control(){
 
         
         time_t now = time(nullptr);
-        if (now - last_execution_time >= 2){
-            save_csv = true;   
-        }
-
-        if (save_csv){
-            save_csv = false;
-
+        if (now - last_csv_save >= 2){
+            // save csv every 2 seconds
+            last_csv_save = now;
             stringstream csv_log;
 
             csv_log << "\"";
@@ -171,8 +164,6 @@ void TemperatureController::execute_temperature_control(){
 
             Logger::log_to_file(csv_log.str());
 
-        }else{
-            save_csv = true;
         }
        
         std::this_thread::sleep_for(chrono::milliseconds(1000));
@@ -194,6 +185,8 @@ void TemperatureController::end(){
 
     this->execute = false;
     this->temperature_control_thread->join();
+
+    delete this->temperature_control_thread;
 
 }
 

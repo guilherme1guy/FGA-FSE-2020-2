@@ -14,18 +14,10 @@ class PotentiometerManager {
 
 private:
     const vector<unsigned char> REQUEST_BYTES = {0x3, 0x1, 0x8, 0x6};
-
-    vector<float> internal_temperatures;
-    vector<float> potentiometer_temperatures;
-
-    float update_temperature(unsigned char operation_code, vector<float>* save_vector);
+    float update_temperature(unsigned char operation_code);
 
 public:
     PotentiometerManager() = default;
-
-    vector<float> get_all_internal_temperatures();
-    vector<float> get_all_potentiometer_temperatures();
-
     float get_internal_temperature();
     float get_potentiometer_temperature();
 

@@ -32,6 +32,7 @@ private:
 
 protected:
     mutex* file_buffer_lock;
+    mutex* log_lines_lock;
 
 public:
     // src: https://github.com/hnrck/singleton_example
@@ -48,7 +49,7 @@ public:
     static void flush_file_buffer();
     static void end_logger();
 
-    static list<string> get_log_lines();
+    static vector<string> get_log_lines();
 
 };
 

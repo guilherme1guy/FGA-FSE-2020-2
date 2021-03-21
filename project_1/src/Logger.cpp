@@ -18,6 +18,7 @@ Logger::Logger(){
     }
 
     Logger::file_buffer_lock = new mutex();
+    Logger::log_lines_lock = new mutex();
 
     this->writer_thread = new thread(&Logger::writer_execute, this);
 }
@@ -28,6 +29,7 @@ Logger::~Logger() {
     this->writer_thread->join();
 
     delete Logger::file_buffer_lock;
+    delete Logger::log_lines_lock;
 
 }
 
@@ -74,12 +76,19 @@ void Logger::log_to_screen(const string& log_text)
     stringstream s;
     s << get_prefix();
     s << log_text << '\n';
-    
+
+    get_instance().log_lines_lock->lock();
+
+    // insert new log at the end
     auto *v = &(get_instance().log_lines);
     v->push_back(s.str());
+
+    // remove old log from the beginning to keep size
     while (v->size() > Logger::MAX_LOG_LINES){
         v->pop_front();
     }
+
+    get_instance().log_lines_lock->unlock();
 }
 
 void Logger::log_to_file(const string& text)
@@ -113,10 +122,24 @@ void Logger::end_logger()
     flush_file_buffer();
 }
 
-list<string> Logger::get_log_lines(){
+vector<string> Logger::get_log_lines(){
 
-    auto logs = get_instance().log_lines;
+    // a lock and a copy is needed, since a thread can update
+    // the logs on screen while the list is being written on
+    // the screen
+    get_instance().log_lines_lock->lock();
 
+    // copy lines
+    vector<string> logs;
+    logs.reserve(MAX_LOG_LINES + 1);
+
+    for (const auto& log : get_instance().log_lines){
+        logs.push_back(log);
+    }
+
+    get_instance().log_lines_lock->unlock();
+
+    // return copied lines
     return logs;
 }
 

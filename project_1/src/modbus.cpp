@@ -103,11 +103,11 @@ ModbusMessage* ModbusMessage::send(ModbusMessage* message) {
     stringstream log;
     log << "RAW: [ ";
 
-    for (int i = 0; i < raw_message.size(); i++)
+    for (unsigned char i : raw_message)
     {
         
         char local_text[6]; 
-        sprintf(local_text, "0x%02X ", raw_message[i]);
+        sprintf(local_text, "0x%02X ", i);
         log << local_text;
         
     }
@@ -240,7 +240,7 @@ ModbusMessage* ModbusMessage::create_send_float(float number)
     return new ModbusMessage(0x01, 0x16, data);
 }
 
-ModbusMessage* ModbusMessage::create_send_string(string str)
+ModbusMessage* ModbusMessage::create_send_string(const string& str)
 {
     // cap at maximum string size, ignoring extra text
     const int MAX_STR_SIZE = 200;
@@ -264,7 +264,7 @@ ModbusMessage* ModbusMessage::create_send_string(string str)
 
 }
 
-vector<unsigned char> ModbusMessage::u_char_pointer_to_vector(unsigned char *origin, int size) {
+vector<unsigned char> ModbusMessage::u_char_pointer_to_vector(const unsigned char *origin, int size) {
 
     vector<unsigned char> target_vector;
     target_vector.resize(size);

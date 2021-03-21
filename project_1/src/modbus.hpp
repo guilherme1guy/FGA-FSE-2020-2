@@ -37,12 +37,12 @@ public:
 
     static ModbusMessage* create_send_int(int number);
     static ModbusMessage* create_send_float(float number);
-    static ModbusMessage* create_send_string(string str);
+    static ModbusMessage* create_send_string(const string& str);
 
     static ModbusMessage* from_pointer(unsigned char* raw_message, int size);
 
 
-    static vector<unsigned char> u_char_pointer_to_vector(unsigned char* origin, int size);
+    static vector<unsigned char> u_char_pointer_to_vector(const unsigned char* origin, int size);
     static unsigned char* u_char_vector_to_u_char_pointer(vector<unsigned char> origin);
 };
 
