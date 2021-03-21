@@ -51,7 +51,7 @@ ModbusMessage* uart_communication(unsigned char *data, int data_length)
         }
     }
 
-    sleep(1);
+    usleep(100000); // 100ms
 
     bool closed_stream = false;
     ModbusMessage* response = nullptr;
