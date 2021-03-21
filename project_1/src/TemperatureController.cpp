@@ -51,7 +51,7 @@ void TemperatureController::update_data()
 {
 
 
-    auto f_it = async(&PotentiometerManager::get_internal_temperature, this->potentiometer);
+	auto f_it = async(&PotentiometerManager::get_internal_temperature, this->potentiometer);
     auto f_et = async(&PotentiometerManager::get_potentiometer_temperature, this->potentiometer);
 
     float rt;

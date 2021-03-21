@@ -22,7 +22,7 @@ private:
     Logger();
 
     thread *writer_thread;
-    void writer_execute();
+    void writer_execute() const;
     bool execute = true;
 
     static string get_prefix();
@@ -42,8 +42,8 @@ public:
     Logger(Logger &&) noexcept = default;
     Logger &operator=(Logger &&) noexcept = default;
 
-    static void log_to_screen(string log_text);
-    static void log_to_file(string text);
+    static void log_to_screen(const string& log_text);
+    static void log_to_file(const string& text);
 
     static void flush_file_buffer();
     static void end_logger();

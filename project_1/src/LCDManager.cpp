@@ -57,7 +57,7 @@ int LCDManager::get_fd()
     return this->fd;
 }
 
-void LCDManager::write_line(int line, string text)
+void LCDManager::write_line(int line, const string& text)
 {
 
     // converting to c-type strings for libary integration
@@ -78,10 +78,10 @@ void LCDManager::_write_on_screen()
 }
 
 
-void LCDManager::write_on_screen(string line1, string line2)
+void LCDManager::write_on_screen(string l1, string l2)
 {
     // use an empty string when the line is not needed
 
-    this->line1 = line1;
-    this->line2 = line2;
+    this->line1 = l1;
+    this->line2 = l2;
 }

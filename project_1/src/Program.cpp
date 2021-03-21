@@ -28,7 +28,7 @@ void Program::draw_logs()
 {
     auto lines = Logger::get_log_lines();
 
-    for (auto line : lines)
+    for (const auto& line : lines)
     {
         printw(line.c_str());
     }
@@ -73,14 +73,14 @@ void Program::menu()
     }
 
     bool temperature_set = false;
-    string temperature_chars = "";
+    string temperature_chars;
 
     for (;;)
     {
         clear();
         move(1, 1);
 
-        draw_logs();
+        //draw_logs();
         draw_division();
         
         draw_information();
@@ -133,8 +133,6 @@ void Program::menu()
                 temperature_set = true;
             }
         }
-
-        draw_division();
 
         refresh();
 

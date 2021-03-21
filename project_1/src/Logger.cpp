@@ -14,7 +14,7 @@ using namespace std;
 Logger::Logger(){
 
     for(int i = 0; i < MAX_LOG_LINES; i++){
-        this->log_lines.push_back("\n");
+        this->log_lines.emplace_back("\n");
     }
 
     Logger::file_buffer_lock = new mutex();
@@ -31,7 +31,7 @@ Logger::~Logger() {
 
 }
 
-void Logger::writer_execute() {
+void Logger::writer_execute() const {
 
     while(execute){
         flush_file_buffer();
@@ -69,7 +69,7 @@ Logger &Logger::get_instance() {
   return (logger);
 }
 
-void Logger::log_to_screen(string log_text)
+void Logger::log_to_screen(const string& log_text)
 {
     stringstream s;
     s << get_prefix();
@@ -77,13 +77,12 @@ void Logger::log_to_screen(string log_text)
     
     auto *v = &(get_instance().log_lines);
     v->push_back(s.str());
-
     while (v->size() > Logger::MAX_LOG_LINES){
         v->pop_front();
     }
 }
 
-void Logger::log_to_file(string text)
+void Logger::log_to_file(const string& text)
 {
     get_instance().file_buffer_lock->lock();
     get_instance().file_buffer.push(text);
@@ -115,7 +114,10 @@ void Logger::end_logger()
 }
 
 list<string> Logger::get_log_lines(){
-    return get_instance().log_lines;
+
+    auto logs = get_instance().log_lines;
+
+    return logs;
 }
 
 
