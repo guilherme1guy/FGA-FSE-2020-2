@@ -52,7 +52,7 @@ private:
 
     void update_lcd();
 
-    int clamp(int min, int max, int value);
+    float clamp(float value, float min_v, float max_v);
 
     // returns (resistor %, fan %) based on pid result
     tuple<int, int> get_activation_values();

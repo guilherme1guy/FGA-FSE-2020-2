@@ -39,7 +39,8 @@ void TemperatureController::compute_pid()
     auto delta_error = (error - last_error) / delta_time; // derivative
 
     // compute pid
-    this->temperature_adjustment = this->kp * error + this->ki * error_sum + this->kd * delta_error;
+    auto pid = this->kp * error + this->ki * error_sum + this->kd * delta_error;
+    this->temperature_adjustment = this->clamp(pid, -100.0, 100.0);
 
     // remember values for next run
     this->last_error = error;
@@ -70,19 +71,9 @@ void TemperatureController::update_data()
     this->reference_temperature = rt;
 }
 
-int TemperatureController::clamp(int min, int max, int value){
+float TemperatureController::clamp(float value, float min_v, float max_V){
 
-    int final_value;
-
-    if (value < min){
-        final_value = min;
-    }else if (value > max){
-        final_value = max;
-    }else{
-        final_value = value;
-    }
-
-    return final_value;
+    return max(min_v, min(max_V, value));
 }
 
 tuple<int, int> TemperatureController::get_activation_values(){
@@ -94,11 +85,11 @@ tuple<int, int> TemperatureController::get_activation_values(){
     if (this->temperature_adjustment < 0){
         // turn on the resistor to heat up
         // the resistor has a range of 0% to 100%
-        resistor = this->clamp(0, 100, (int) round(this->temperature_adjustment * -1));
+        resistor = (int) round(this->clamp(abs(this->temperature_adjustment), 0, 100));
     }else{
         // turn on the fan to cool down
         // the fan has a range of 40% to 100%
-        resistor = this->clamp(40, 100, (int) round(this->temperature_adjustment * -1));
+        resistor =  (int) round(this->clamp(abs(this->temperature_adjustment), 40, 100));
     }
 
     return make_tuple(resistor, fan);
