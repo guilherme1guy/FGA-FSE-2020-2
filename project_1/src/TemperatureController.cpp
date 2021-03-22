@@ -90,7 +90,7 @@ tuple<int, int> TemperatureController::get_activation_values(){
     }else{
         // turn on the fan to cool down
         // the fan has a range of 40% to 100%
-        resistor =  (int) round(this->clamp(abs(this->temperature_adjustment), 40, 100));
+        fan =  (int) round(this->clamp(abs(this->temperature_adjustment), 40, 100));
     }
 
     return make_tuple(resistor, fan);
