@@ -81,8 +81,8 @@ tuple<int, int> TemperatureController::get_activation_values(){
 
     int resistor = 0, fan = 0;
 
-    // if pid is negative it means that the system needs to heat up
-    if (this->temperature_adjustment < 0){
+    // if pid is positive it means that the system needs to heat up
+    if (this->temperature_adjustment > 0){
         // turn on the resistor to heat up
         // the resistor has a range of 0% to 100%
         resistor = (int) round(this->clamp(abs(this->temperature_adjustment), 0, 100));
@@ -134,6 +134,7 @@ void TemperatureController::execute_temperature_control(){
         Logger::log_to_screen("Temperature control iteration");
 
         update_data();
+        update_lcd();
         compute_pid();
 
         auto activation_percentages = this->get_activation_values();
@@ -168,6 +169,8 @@ void TemperatureController::execute_temperature_control(){
        
         std::this_thread::sleep_for(chrono::milliseconds(1000));
     }
+
+    delete gpio;
     
 }
 
