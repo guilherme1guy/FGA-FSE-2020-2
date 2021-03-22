@@ -36,8 +36,8 @@ void TemperatureController::compute_pid()
     float delta_time = delta.count();
 
     float error = this->reference_temperature - this->internal_temperature;
-    this->error_sum += (error * delta_time);              //integral
-    auto delta_error = (error - last_error) / delta_time; // derivative
+    this->error_sum = this->clamp(this->error_sum + error * delta_time, -100, 100);  //integral
+    auto delta_error = this->clamp((error - last_error) / delta_time, -100, 100);    // derivative
 
     // compute pid
     auto pid = this->kp * error + this->ki * error_sum + this->kd * delta_error;
