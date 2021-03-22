@@ -1,7 +1,7 @@
 CC = gcc
 CCXX = g++
 
-LDFLAGS = -lm -lwiringPi -lpthread -lcrypt -lrt
+LDFLAGS = -lm -lwiringPi -lpthread -lcrypt -lrt -lncurses	
 BLDDIR = .
 
 INCDIR = $(BLDDIR)/inc
