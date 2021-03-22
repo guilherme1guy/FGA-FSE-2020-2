@@ -31,8 +31,9 @@ void TemperatureController::update_lcd()
 
 void TemperatureController::compute_pid()
 {
-    time_t now = time(nullptr);
-    float delta_time = difftime(now, last_time);
+    auto now = chrono::high_resolution_clock::now();
+    auto delta = chrono::duration_cast<chrono::duration<double>>(now - last_time);
+    float delta_time = delta.count();
 
     float error = this->reference_temperature - this->internal_temperature;
     this->error_sum += (error * delta_time);              //integral
@@ -106,7 +107,7 @@ TemperatureController::TemperatureController()
 
     // populate initial data
     this->update_data();
-    this->last_time = time(nullptr);
+    this->last_time = chrono::high_resolution_clock::now();
 }
 
 TemperatureController::~TemperatureController() {
@@ -128,7 +129,7 @@ void TemperatureController::execute_temperature_control(){
     
     auto* gpio = new GPIOManager();
 
-    time_t last_csv_save = time(nullptr);
+    auto last_csv_save = chrono::high_resolution_clock::now();
     while (this->execute)
     {
         Logger::log_to_screen("Temperature control iteration");
@@ -142,15 +143,17 @@ void TemperatureController::execute_temperature_control(){
         gpio->set_value(GPIOManager::GPIO_RESISTOR_PIN, get<0>(activation_percentages));
         gpio->set_value(GPIOManager::GPIO_FAN_PIN, get<1>(activation_percentages));
 
-        
-        time_t now = time(nullptr);
-        if (now - last_csv_save >= 2){
+        auto now = chrono::high_resolution_clock::now();
+        auto time_delta = chrono::duration_cast<chrono::duration<double>>(now - last_csv_save);
+        if (time_delta.count() >= 2.0){
             // save csv every 2 seconds
             last_csv_save = now;
             stringstream csv_log;
-
+            
+            std::time_t last_time_c = std::chrono::system_clock::to_time_t(this->last_time);
+            
             csv_log << "\"";
-            csv_log << this->last_time;
+            csv_log << last_time_c;
             csv_log << "\", ";
             csv_log << this->internal_temperature;
             csv_log << ", ";

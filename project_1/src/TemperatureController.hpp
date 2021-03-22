@@ -33,7 +33,7 @@ private:
     float temperature_adjustment;
 
     // last time pid was executed (used to get time delta)
-    time_t last_time;
+    chrono::high_resolution_clock::time_point last_time;
 
     void compute_pid();
     void update_data();
