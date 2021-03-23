@@ -16,9 +16,14 @@
 
 ## Experimento
 
-Este é gráfico gerado a partir dos dados coletados durante a execução do programa:
+Este é o gráfico que mostra as temperaturas (interna, externa, referencial) e as porcentagens de ativação (ventoinha, resistor), gerado a partir dos dados coletados durante a execução do programa:
 ![https://docs.google.com/spreadsheets/d/e/2PACX-1vTQp8TVSkmhVAoUPqSzuEt8Sxtiuo0tmisl-uQDdpt7wPoRLFCgEkh2dBzIjhgWVtrXKUK1Quk_YaMz/pubchart?oid=1791777157&format=interactive](docs/chart.png)
+
+E este gráfico mostra a sinal de controle (PID) durante o mesmo perído de execução:
+![https://docs.google.com/spreadsheets/d/e/2PACX-1vTQp8TVSkmhVAoUPqSzuEt8Sxtiuo0tmisl-uQDdpt7wPoRLFCgEkh2dBzIjhgWVtrXKUK1Quk_YaMz/pubchart?oid=1148977348&format=interactive](docs/chart_pid.png)
 
 O período de tempo é coletado no formato de segundos desde a Epoch do Linux, o que fornece tanto o dia, quanto a hora, em que tal evento ocorreu. Os dados puros podem ser conferidos no arquivo `docs/log.csv`
 
-[Este link](https://docs.google.com/spreadsheets/d/e/2PACX-1vTQp8TVSkmhVAoUPqSzuEt8Sxtiuo0tmisl-uQDdpt7wPoRLFCgEkh2dBzIjhgWVtrXKUK1Quk_YaMz/pubchart?oid=1791777157&format=interactive) leva para uma versão interativa do gráfico.
+O valor de PID para o segundo gráfico é calculádo com: `pid[n] = 0 + resistor[n] - ventoinha[n]`.
+
+[Este link](https://docs.google.com/spreadsheets/d/e/2PACX-1vTQp8TVSkmhVAoUPqSzuEt8Sxtiuo0tmisl-uQDdpt7wPoRLFCgEkh2dBzIjhgWVtrXKUK1Quk_YaMz/pubchart?oid=1791777157&format=interactive) e [este link](https://docs.google.com/spreadsheets/d/e/2PACX-1vTQp8TVSkmhVAoUPqSzuEt8Sxtiuo0tmisl-uQDdpt7wPoRLFCgEkh2dBzIjhgWVtrXKUK1Quk_YaMz/pubchart?oid=1148977348&format=interactive) levam versões interativas do gráficos.
