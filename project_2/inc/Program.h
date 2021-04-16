@@ -8,7 +8,7 @@
 #include "curses.h"
 
 #include "Logger.h"
-#include "GPIOManager.h"
+#include "GPIOConnection.h"
 #include "BMEManager.h"
 
 using namespace std;
@@ -39,65 +39,21 @@ private:
             init_pair(7, COLOR_WHITE, COLOR_BLACK);
         }
 
-        bool temperature_set = false;
-        string temperature_chars;
-
         for (;;)
         {
             clear();
             move(1, 1);
 
-            //draw_logs();
-            draw_division();
+            drawInformation();
+            drawDivision();
 
-            draw_information();
-            draw_division();
+            printw("Running...");
 
             int c = getch(); /* refresh, accept single keystroke of input */
 
-            if (temperature_set)
+            if (c == 'q')
             {
-
-                printw("Input desired temperature. A negative value will set it to sensor mode.\n");
-                printw("Press ENTER when done.\n");
-                printw("> %s", temperature_chars.c_str());
-                if (c == '\n' || c == 13) // 13 is carriage return char
-                {
-                    try
-                    {
-
-                        float temperature = stof(temperature_chars);
-                        if (temperature > 100)
-                            temperature = 100.0;
-
-                        temperature_chars = "";
-                        temperature_set = false;
-                    }
-                    catch (const std::exception &e)
-                    {
-                        std::cerr << e.what() << '\n';
-
-                        temperature_chars = "";
-                    }
-                }
-                else if (c != -1)
-                {
-                    temperature_chars += c;
-                }
-            }
-            else
-            {
-                printw("Commands: q - Exit // s - Set Reference Temperature\n");
-                printw("> ");
-
-                if (c == 'q')
-                {
-                    break;
-                }
-                else if (c == 's')
-                {
-                    temperature_set = true;
-                }
+                break;
             }
 
             refresh();
@@ -106,23 +62,13 @@ private:
         }
     }
 
-    void draw_logs()
-    {
-        auto lines = Logger::get_log_lines();
-
-        for (const auto& line : lines)
-        {
-            printw(line.c_str());
-        }
-    }
-
-    void draw_division()
+    void drawDivision()
     {
         printw("-------------------------------\n");
     }
 
 
-    void draw_information()
+    void drawInformation()
     {
 
     }
@@ -148,8 +94,7 @@ public:
 
     void quit()
     {
-        Logger::end_logger();
-
+        delete Logger::getInstance();
         endwin();
     }
 

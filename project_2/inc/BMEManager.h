@@ -1,8 +1,9 @@
 #ifndef PROJECT_2_BMEMANAGER_HPP
 #define PROJECT_2_BMEMANAGER_HPP
 
-#include "external/bme280.h"
 #include <tuple>
+
+#include "external/bme280.h"
 
 #include "Logger.h"
 
@@ -10,22 +11,22 @@ using namespace std;
 
 class BMEManager {
 
-    int open_device() {
+    int openDevice() {
         return bme280Init(1, 0x76);
     }
 
     // temperature, pression, humidity
-    tuple<float, float, float> read_from_device() {
+    tuple<float, float, float> readFromDevice() {
 
-        int i_temperature, i_pressure, i_humidity;
+        int iTemperature, iPressure, iHumidity;
         float temperature, pressure, humidity;
 
-        bme280ReadValues(&i_temperature, &i_pressure, &i_humidity);
+        bme280ReadValues(&iTemperature, &iPressure, &iHumidity);
 
         // value conversion for float
-        temperature = (float) i_temperature/100.0;
-        i_humidity =  (float) i_pressure / 256.0;
-        humidity = (float) i_humidity / 1024.0;
+        temperature = (float) iTemperature / 100.0;
+        iHumidity = (float) iPressure / 256.0;
+        humidity = (float) iHumidity / 1024.0;
 
         return make_tuple(temperature, pressure, humidity);
     }
@@ -33,16 +34,16 @@ class BMEManager {
 public:
     BMEManager() = default;
 
-    tuple<float, float, float> get_data() {
+    tuple<float, float, float> getData() {
 
-        int open_status = open_device();
+        int open_status = openDevice();
 
         if (open_status != 0){
-            Logger::log_to_screen("Error openning BME!");
+            Logger::logToScreen("Error openning BME!");
             return make_tuple(0.0, 0.0, 0.0);
         }
 
-        return read_from_device();
+        return readFromDevice();
     }
 
 };
