@@ -44,6 +44,18 @@ protected:
         return MessageCreator::ackMessage().encode();
     }
 
+    string doAlarmAlert(Message m)
+    {
+
+        int activatedSensor = atoi(m.data.c_str());
+
+        Logger::logToScreen("Sensor " + Constants::getSensorLocation(activatedSensor) + " Activated!");
+
+        // TODO: check if alarms are enabled and play mp3
+
+        return MessageCreator::ackMessage().encode();
+    }
+
     string _handleMessage(Message message)
     {
 
@@ -51,10 +63,10 @@ protected:
         {
         case Constants::IDENTIFY:
             return doIdentify(message);
-            break;
         case Constants::DISCONNECT:
             return doDisconnect(message);
-            break;
+        case Constants::ALARM_ALERT:
+            return doAlarmAlert(message);
         default:
             break;
         }

@@ -15,13 +15,16 @@ private:
     string masterIP;
     int masterPort;
 
+    Client getClient()
+    {
+        return Client(masterIP, masterPort);
+    }
+
     void identifyOnServer()
     {
 
         Message m = MessageCreator::identifyClientMessage(this->server->getServerPort());
-
-        Client *c = new Client(masterIP, masterPort);
-        Message r = c->sendMessage(m.encode());
+        Message r = getClient().sendMessage(m.encode());
 
         if (r.type == Constants::ERROR)
         {
@@ -36,9 +39,23 @@ private:
     void disconnectFromServer()
     {
         Message m = MessageCreator::disconnectMessage(this->server->getServerPort());
+        getClient().sendMessage(m.encode()); // in this case the response is ignored
+                                             // since we are, most likely, closing the client
+    }
 
-        Client *c = new Client(masterIP, masterPort);
-        Message r = c->sendMessage(m.encode());
+    void alarmAlert(int sensorID)
+    {
+
+        Message m = MessageCreator::alarmAlertMessage(sensorID);
+
+        int rType;
+        // keep sending until server ACK
+        do
+        {
+
+            Message r = getClient().sendMessage(m.encode());
+            rType = r.type;
+        } while (rType != Constants::ACK);
     }
 
 protected:
@@ -69,6 +86,15 @@ public:
     {
         identifyOnServer();
         Logger::logToScreen("Successfully identified...");
+
+        // TODO: Initialize GPIO devices
+
+        // TODO: Setup alarm watchdog
+
+        while (1)
+        {
+            this_thread::sleep_for(chrono::seconds(1));
+        }
     }
 };
 

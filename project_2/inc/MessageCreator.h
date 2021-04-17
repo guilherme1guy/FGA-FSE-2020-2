@@ -29,6 +29,11 @@ public:
     {
         return Message(Constants::DISCONNECT, to_string(clientPort));
     }
+
+    static Message alarmAlertMessage(int sensorID)
+    {
+        return Message(Constants::ALARM_ALERT, to_string(sensorID));
+    }
 };
 
 #endif // PROJECT_2_MESSAGECREATOR_H
