@@ -8,8 +8,8 @@
 
 #include "curses.h"
 
-#include "BMEManager.h"
-#include "GPIOConnection.h"
+#include "gpio/GPIOConnection.h"
+#include "i2c/BMEManager.h"
 #include "log/Logger.h"
 
 #include "connection/Message.h"

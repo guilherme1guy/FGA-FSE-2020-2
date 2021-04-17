@@ -1,11 +1,11 @@
 #ifndef PROJECT_2_CLIENTPROGRAM_H
 #define PROJECT_2_CLIENTPROGRAM_H
 
-#include "BMEManager.h"
-#include "GPIOConnection.h"
 #include "Program.h"
 #include "connection/Message.h"
 #include "connection/MessageCreator.h"
+#include "gpio/GPIOConnection.h"
+#include "i2c/BMEManager.h"
 
 class ClientProgram : public Program
 {
