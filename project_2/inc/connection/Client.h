@@ -1,10 +1,10 @@
 #ifndef PROJECT_2_CLIENT_H
 #define PROJECT_2_CLIENT_H
 
-#include "Logger.h"
 #include "Constants.h"
-#include "MessageCreator.h"
 #include "Message.h"
+#include "MessageCreator.h"
+#include "log/Logger.h"
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>

@@ -2,9 +2,9 @@
 #define PROJECT_2_SERVERPROGRAM_H
 
 #include "Program.h"
-#include "Logger.h"
-#include "Message.h"
-#include "MessageCreator.h"
+#include "connection/Message.h"
+#include "connection/MessageCreator.h"
+#include "log/Logger.h"
 #include <algorithm>
 #include <set>
 #include <tuple>

@@ -1,9 +1,9 @@
 #include <csignal>
 #include <string>
 
-#include "Program.h"
-#include "ServerProgram.h"
-#include "ClientProgram.h"
+#include "program/ClientProgram.h"
+#include "program/Program.h"
+#include "program/ServerProgram.h"
 
 using namespace std;
 

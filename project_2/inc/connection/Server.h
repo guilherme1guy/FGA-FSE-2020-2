@@ -8,8 +8,8 @@
 #include <thread>
 #include <unistd.h>
 
-#include "Program.h"
-#include "Logger.h"
+#include "log/Logger.h"
+#include "program/Program.h"
 
 using namespace std;
 

@@ -10,12 +10,12 @@
 
 #include "BMEManager.h"
 #include "GPIOConnection.h"
-#include "Logger.h"
+#include "log/Logger.h"
 
-#include "Message.h"
+#include "connection/Message.h"
 
-#include "Server.h"
-#include "Client.h"
+#include "connection/Client.h"
+#include "connection/Server.h"
 
 using namespace std;
 
