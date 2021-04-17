@@ -6,6 +6,9 @@
 #include "connection/MessageCreator.h"
 #include "gpio/GPIOConnection.h"
 #include "i2c/BMEManager.h"
+#include <map>
+#include <vector>
+#include "gpio/AlarmWatchdog.h"
 
 class ClientProgram : public Program
 {
@@ -14,6 +17,10 @@ class ClientProgram : public Program
 private:
     string masterIP;
     int masterPort;
+
+    map<int, GPIOConnection *> inputGpioDevices;
+    map<int, GPIOConnection *> outputGpioDevices;
+    vector<AlarmWatchdog *> alarmWatchdogs;
 
     Client getClient()
     {
@@ -43,21 +50,6 @@ private:
                                              // since we are, most likely, closing the client
     }
 
-    void alarmAlert(int sensorID)
-    {
-
-        Message m = MessageCreator::alarmAlertMessage(sensorID);
-
-        int rType;
-        // keep sending until server ACK
-        do
-        {
-
-            Message r = getClient().sendMessage(m.encode());
-            rType = r.type;
-        } while (rType != Constants::ACK);
-    }
-
 protected:
     string _handleMessage(Message message)
     {
@@ -80,6 +72,34 @@ public:
     ~ClientProgram()
     {
         disconnectFromServer();
+
+        auto it = alarmWatchdogs.begin();
+        while (it != alarmWatchdogs.end())
+        {
+            auto *awPtr = *it;
+            it = alarmWatchdogs.erase(it);
+            delete awPtr;
+        }
+
+        // delete input gpio
+        for (auto it = inputGpioDevices.cbegin(), next_it = it; it != inputGpioDevices.cend(); it = next_it)
+        {
+            ++next_it;
+            GPIOConnection *connection = it->second;
+            inputGpioDevices.erase(it);
+
+            delete connection;
+        }
+
+        // delete output gpio
+        for (auto it = outputGpioDevices.cbegin(), next_it = it; it != outputGpioDevices.cend(); it = next_it)
+        {
+            ++next_it;
+            GPIOConnection *connection = it->second;
+            outputGpioDevices.erase(it);
+
+            delete connection;
+        }
     }
 
     void loop()
@@ -87,9 +107,28 @@ public:
         identifyOnServer();
         Logger::logToScreen("Successfully identified...");
 
-        // TODO: Initialize GPIO devices
+        vector<int> inputDevices = Constants::getInputDevices();
+        vector<int> outputDevices = Constants::getOutputDevices();
 
-        // TODO: Setup alarm watchdog
+        // initialize gpio devices
+        for (int device : inputDevices)
+        {
+            inputGpioDevices[device] = new GPIOConnection(device, GPIOConnection::GPIO_INPUT);
+        }
+
+        for (int device : outputDevices)
+        {
+            outputGpioDevices[device] = new GPIOConnection(device, GPIOConnection::GPIO_OUTPUT);
+        }
+
+        // Setup alarm watchdog
+        for (int device : inputDevices)
+        {
+            Client *c = new Client(masterIP, masterPort);
+            AlarmWatchdog *alarmWatchdog = new AlarmWatchdog(inputGpioDevices[device], c);
+
+            alarmWatchdogs.push_back(alarmWatchdog);
+        }
 
         while (1)
         {
