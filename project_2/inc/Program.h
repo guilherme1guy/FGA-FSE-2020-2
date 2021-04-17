@@ -4,101 +4,82 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <chrono>
 
 #include "curses.h"
 
-#include "Logger.h"
-#include "GPIOConnection.h"
 #include "BMEManager.h"
+#include "GPIOConnection.h"
+#include "Logger.h"
+
+#include "Message.h"
+
+#include "Server.h"
+#include "Client.h"
 
 using namespace std;
 
-class Program{
+class Program
+{
 
-private:
+    bool execute = true;
 
-    void menu()
-    {
+protected:
+    // server used to receive messages
+    Server *server;
 
-        keypad(stdscr, TRUE);
-        nodelay(stdscr, TRUE);
-        nonl();
-        cbreak();
-        echo();
-
-        if (has_colors())
-        {
-            start_color();
-
-            init_pair(1, COLOR_RED, COLOR_BLACK);
-            init_pair(2, COLOR_GREEN, COLOR_BLACK);
-            init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-            init_pair(4, COLOR_BLUE, COLOR_BLACK);
-            init_pair(5, COLOR_CYAN, COLOR_BLACK);
-            init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
-            init_pair(7, COLOR_WHITE, COLOR_BLACK);
-        }
-
-        for (;;)
-        {
-            clear();
-            move(1, 1);
-
-            drawInformation();
-            drawDivision();
-
-            printw("Running...");
-
-            int c = getch(); /* refresh, accept single keystroke of input */
-
-            if (c == 'q')
-            {
-                break;
-            }
-
-            refresh();
-
-            this_thread::sleep_for(chrono::milliseconds(50));
-        }
-    }
-
-    void drawDivision()
-    {
-        printw("-------------------------------\n");
-    }
-
-
-    void drawInformation()
-    {
-
-    }
-
+    virtual string _handleMessage(Message message) = 0;
 
 public:
-
-    Program()
+    virtual void loop()
     {
 
+        Logger::logToScreen("Running...");
+
+        while (execute)
+        {
+            this_thread::sleep_for(chrono::milliseconds(500));
+        }
     }
 
-    ~Program()
+    virtual ~Program()
     {
+        execute = false;
+
+        Logger::logToScreen("Stopping server...");
+        server->stop();
+        delete server;
+
+        Logger::logToScreen("Program destroyed");
     }
 
-
-    void run()
+    static void handleMessage(void *ptr, int clientSocket)
     {
-        menu();
+        Program *p = (Program *)ptr;
+
+        Logger::logToScreen("Receiving message");
+
+        // receive incoming message
+        char messageBuffer[16];
+        int receivedSize = recv(clientSocket, messageBuffer, 16, 0);
+
+        if (receivedSize < 0)
+        {
+            Logger::logToScreen("Error reading message\n");
+            return;
+        }
+
+        // process message
+        string answer = p->_handleMessage(Message::decode(string(messageBuffer), clientSocket));
+
+        // send answer
+        while (send(clientSocket, answer.c_str(), receivedSize, 0) < 0)
+        {
+            printf("Error sending answer\n");
+        }
+
+        close(clientSocket);
     }
-
-
-    void quit()
-    {
-        delete Logger::getInstance();
-        endwin();
-    }
-
 };
-
 
 #endif //PROJECT_2_PROGRAM_H

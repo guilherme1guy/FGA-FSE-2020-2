@@ -1,32 +1,40 @@
 #ifndef PROJECT_2_LOGGER_HPP
 #define PROJECT_2_LOGGER_HPP
 
-#include <iostream>
-#include <string>
-#include <queue>
-#include <list>
-#include <thread>
-#include <mutex>
-#include <sstream>
 #include <fstream>
+#include <iostream>
+#include <list>
+#include <mutex>
+#include <queue>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <memory>
+#include <stdexcept>
+
 #include "LogWriter.h"
 
 using namespace std;
 
-class Logger final {
+class Logger final
+{
 
 private:
-
-    LogWriter* loggerWriter;
+    LogWriter *loggerWriter;
 
     // SINGLETON PATTERN
-    static Logger* instance_;
+    static Logger *instance_;
 
     // private constructor
-    Logger(){
+    Logger()
+    {
         loggerWriter = new LogWriter();
     }
 
+    ~Logger()
+    {
+        delete loggerWriter;
+    }
     // END OF SINGLETON PATTERN
 
 protected:
@@ -61,21 +69,17 @@ protected:
     }
 
 public:
-
-    ~Logger() {
-        delete this->loggerWriter;
-        instance_ = nullptr;
-    }
-
     // SINGLETON PATTERN
     // reference: https://github.com/hnrck/singleton_example
-    static Logger *getInstance() {
+    static Logger *getInstance()
+    {
 
-        if (instance_ == nullptr){
-            instance_ = new Logger();
+        if (Logger::instance_ == nullptr)
+        {
+            Logger::instance_ = new Logger();
         }
 
-        return instance_;
+        return Logger::instance_;
     }
 
     // Deleted copy constructor.
@@ -90,8 +94,7 @@ public:
     Logger &operator=(Logger &&) noexcept = default;
     // END OF SINGLETON PATTERN
 
-
-    static void logToScreen(const string& log_text)
+    static void logToScreen(const string &log_text)
     {
         stringstream s;
         s << getPrefix();
@@ -100,7 +103,7 @@ public:
         cout << s.str();
     }
 
-    static void logToFile(const string& text)
+    static void logToFile(const string &text)
     {
         getInstance()->loggerWriter->log(text);
     }
