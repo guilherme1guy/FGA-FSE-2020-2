@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
+#include <mutex>
+#include <errno.h>
 
 #include "log/Logger.h"
 #include "program/Program.h"
@@ -21,27 +23,37 @@ private:
     struct sockaddr_in serverAddress;
     unsigned short serverPort;
 
+    thread serverThread;
+    mutex serverStateLock;
     bool open = false;
-
-    thread *serverThread;
-    bool keepExecution;
 
     void execute(void (*handleFunction)(void *, int), void *programPtr) const
     {
+        Logger::logToScreen("Server executing and listening");
 
-        int clientSocket;
-        struct sockaddr_in clientAddress;
-        unsigned int clientLength;
-
-        while (keepExecution)
+        while (!this->open)
         {
+            this_thread::yield();
+        }
 
-            clientLength = sizeof(clientAddress);
-            clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientLength);
+        while (this->open)
+        {
+            struct sockaddr_in clientAddress;
+
+            unsigned int clientLength = sizeof(clientAddress);
+            int clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientLength);
 
             if (clientSocket < 0)
             {
-                Logger::logToScreen("Server failed to accept\n");
+                if (this->open)
+                {
+                    Logger::logToScreen("Server failed to accept\n");
+                }
+                else
+                {
+
+                    Logger::logToScreen("Server closing\n");
+                }
                 continue;
             }
 
@@ -57,15 +69,7 @@ private:
 public:
     Server(unsigned short port)
     {
-
         serverPort = port;
-
-        serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-        memset(&serverAddress, 0, sizeof(serverAddress));
-        serverAddress.sin_family = AF_INET;
-        serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-        serverAddress.sin_port = htons(serverPort);
     }
 
     ~Server()
@@ -76,8 +80,20 @@ public:
     void start(void (*handleFunction)(void *, int), void *programPtr)
     {
 
+        serverStateLock.lock();
+
         if (open)
+        {
+            serverStateLock.unlock();
             return;
+        }
+
+        serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+        memset(&serverAddress, 0, sizeof(serverAddress));
+        serverAddress.sin_family = AF_INET;
+        serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+        serverAddress.sin_port = htons(serverPort);
 
         if (serverSocket < 0)
         {
@@ -94,23 +110,42 @@ public:
             Logger::logToScreen("Error on listening");
         }
 
-        keepExecution = true;
-        serverThread = new thread(&Server::execute, this, handleFunction, programPtr);
+        Logger::logToScreen("Server socket created");
+
+        serverThread = thread(&Server::execute, this, handleFunction, programPtr);
         open = true;
+
+        serverStateLock.unlock();
     }
 
     void stop()
     {
 
-        if (!open)
-            return;
+        serverStateLock.lock();
 
-        keepExecution = false;
-        serverSocket = close(serverSocket);
-        serverThread->join();
-        delete serverThread;
+        Logger::logToScreen("Stopping server...");
+
+        if (!open)
+        {
+            serverStateLock.unlock();
+            return;
+        }
 
         open = false;
+
+        if (shutdown(serverSocket, SHUT_RDWR) < 0)
+        {
+            perror(strerror(errno));
+        }
+
+        Logger::logToScreen("Closed server socket");
+
+        serverThread.join();
+
+        Logger::logToScreen("Destroyed server thread");
+
+        Logger::logToScreen("Server stoped");
+        serverStateLock.unlock();
     }
 
     int getServerPort()

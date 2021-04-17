@@ -45,11 +45,8 @@ public:
     virtual ~Program()
     {
         execute = false;
-
-        Logger::logToScreen("Stopping server...");
         server->stop();
         delete server;
-
         Logger::logToScreen("Program destroyed");
     }
 

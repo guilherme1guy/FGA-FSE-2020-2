@@ -1,5 +1,6 @@
 #include <csignal>
 #include <string>
+#include <mutex>
 
 #include "program/ClientProgram.h"
 #include "program/Program.h"
@@ -8,21 +9,33 @@
 using namespace std;
 
 Program *p;
+mutex exit_lock;
 
 static void quit(int sig)
 {
 
-    Logger::logToScreen("Finishing program...");
+    // this lock will never be release, because the program will end
+    // after it is obtained
+    bool hasLock = exit_lock.try_lock();
 
-    if (p != nullptr)
+    if (hasLock)
     {
-        Logger::logToScreen("Destroying program instance...");
-        delete p;
-        p = nullptr;
-    }
+        Logger::logToScreen("Finishing program...");
 
-    Logger::logToScreen("Gracious exit!");
-    exit(sig);
+        if (p != nullptr)
+        {
+            Logger::logToScreen("Destroying program instance...");
+            delete p;
+            p = nullptr;
+        }
+
+        Logger::logToScreen("Gracious exit!");
+        exit(sig);
+    }
+    else
+    {
+        Logger::logToScreen("An exit operation is already in progress");
+    }
 }
 
 void invalid_command()
@@ -38,7 +51,6 @@ void invalid_command()
 
 int main(int argc, const char *argv[])
 {
-
     signal(SIGINT, quit);
 
     // command examples:
@@ -53,6 +65,7 @@ int main(int argc, const char *argv[])
     // agr[1] is mode
     string mode = string(argv[1]);
 
+    // create correct Program object
     if (mode[0] == 's')
     {
         int port = atoi(argv[2]);
@@ -75,6 +88,7 @@ int main(int argc, const char *argv[])
         invalid_command();
     }
 
+    // starts program loop
     p->loop();
 
     quit(0);
