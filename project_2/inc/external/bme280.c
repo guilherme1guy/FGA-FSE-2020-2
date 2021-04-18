@@ -141,7 +141,8 @@ int bme280Init(int iChannel, int iAddr)
     {
     } // suppress warning
 
-    return 0;
+    // MODIFIED: return i2c file handle in case of success
+    return file_i2c;
 
 } /* bme280Init() */
 
