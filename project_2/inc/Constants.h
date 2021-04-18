@@ -18,6 +18,9 @@ public:
   static const char IDENTIFY = 'i';
   static const char DISCONNECT = 'd';
   static const char ALARM_ALERT = '!';
+  static const char UPDATE = 'u';
+
+  static const char SEPARATOR = '|';
 
   // Values also represent Output GPIO pin
   static const int GPIO_LAMP_1 = 17;

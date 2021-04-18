@@ -8,6 +8,7 @@
 #include "i2c/BMEManager.h"
 #include <map>
 #include <vector>
+#include <thread>
 #include "gpio/AlarmWatchdog.h"
 
 class ClientProgram : public Program
@@ -48,6 +49,28 @@ private:
         Message m = MessageCreator::disconnectMessage(this->server->getServerPort());
         getClient().sendMessage(m.encode()); // in this case the response is ignored
                                              // since we are, most likely, closing the client
+    }
+
+    void updateTemperatureAndHumidity(ClientProgram *t) const
+    {
+
+        BMEManager bme;
+
+        while (execute)
+        {
+            auto now = chrono::system_clock::now();
+
+            Logger::logToScreen("Sending update to master server...");
+
+            auto i2cValues = bme.getData();
+
+            Message m = MessageCreator::updateMessage(get<0>(i2cValues), get<2>(i2cValues));
+            t->getClient().sendMessage(m.encode());
+
+            auto s = chrono::duration_cast<chrono::seconds>(now.time_since_epoch());
+            auto next_wake = chrono::system_clock::time_point(++s);
+            this_thread::sleep_until(next_wake);
+        }
     }
 
 protected:
@@ -130,10 +153,19 @@ public:
             alarmWatchdogs.push_back(alarmWatchdog);
         }
 
-        while (1)
+        // every 1 second the master server should be updated about temperature and humidity
+        thread updateThread = thread(
+            &ClientProgram::updateTemperatureAndHumidity, this, this);
+
+        while (execute)
         {
+            // wait for program end
             this_thread::sleep_for(chrono::seconds(1));
         }
+
+        // execute will be false at this point
+        // so we can wait for thread join
+        updateThread.join();
     }
 };
 

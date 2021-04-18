@@ -4,6 +4,7 @@
 #include "Program.h"
 #include "connection/Message.h"
 #include "connection/MessageCreator.h"
+#include "i2c/BMEDataEncoder.h"
 #include "log/Logger.h"
 #include <algorithm>
 #include <set>
@@ -52,6 +53,13 @@ protected:
         Logger::logToScreen("Sensor " + Constants::getSensorLocation(activatedSensor) + " Activated!");
 
         // TODO: check if alarms are enabled and play mp3
+
+        return MessageCreator::ackMessage().encode();
+    }
+
+    string doUpdateTemperatureHumidity(Message m)
+    {
+        auto values = BMEDataEncoder::decodeTemperatureHumidity(m.data);
 
         return MessageCreator::ackMessage().encode();
     }

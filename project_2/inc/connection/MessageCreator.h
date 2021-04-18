@@ -3,6 +3,7 @@
 
 #include "Message.h"
 #include "Constants.h"
+#include "i2c/BMEDataEncoder.h"
 
 using namespace std;
 
@@ -33,6 +34,13 @@ public:
     static Message alarmAlertMessage(int sensorID)
     {
         return Message(Constants::ALARM_ALERT, to_string(sensorID));
+    }
+
+    static Message updateMessage(float temperature, float humidity)
+    {
+        return Message(
+            Constants::UPDATE,
+            BMEDataEncoder::encodeTemperatureHumidity(temperature, humidity));
     }
 };
 

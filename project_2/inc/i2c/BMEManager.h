@@ -1,10 +1,11 @@
 #ifndef PROJECT_2_BMEMANAGER_HPP
 #define PROJECT_2_BMEMANAGER_HPP
 
+#include "external/bme280.h"
+
 #include <tuple>
 #include <errno.h>
-
-#include "external/bme280.h"
+#include <string.h>
 
 #include "log/Logger.h"
 
@@ -80,6 +81,7 @@ public:
         closeDevice();
     }
 
+    // temperature, pression, humidity
     tuple<float, float, float> getData()
     {
 

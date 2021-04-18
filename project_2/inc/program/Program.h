@@ -22,9 +22,9 @@ using namespace std;
 class Program
 {
 
+protected:
     bool execute = true;
 
-protected:
     // server used to receive messages
     Server *server;
 
