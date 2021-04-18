@@ -6,8 +6,6 @@
 #include <thread>
 #include <chrono>
 
-#include "curses.h"
-
 #include "gpio/GPIOConnection.h"
 #include "i2c/BMEManager.h"
 #include "log/Logger.h"
@@ -23,14 +21,15 @@ class Program
 {
 
 protected:
-    bool execute = true;
+    bool execute;
+    bool safeStop = false;
 
     // server used to receive messages
     Server *server;
+    thread *loopThread;
 
     virtual string _handleMessage(Message message) = 0;
 
-public:
     virtual void loop()
     {
 
@@ -42,12 +41,34 @@ public:
         }
     }
 
+public:
+    Program()
+    {
+        Logger::logToScreen("Starting program thread");
+        execute = true;
+
+        if (loopThread == nullptr)
+        {
+            loopThread = new thread(&Program::loop, this);
+        }
+    }
+
     virtual ~Program()
     {
         execute = false;
-        server->stop();
-        delete server;
-        Logger::logToScreen("Program destroyed");
+
+        if (server != nullptr)
+        {
+
+            server->stop();
+            delete server;
+            server = nullptr;
+        }
+
+        loopThread->join();
+        delete loopThread;
+
+        Logger::logToScreen("Program thread ended");
     }
 
     static void handleMessage(void *ptr, int clientSocket)

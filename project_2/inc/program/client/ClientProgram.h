@@ -220,6 +220,9 @@ public:
         // execute will be false at this point
         // so we can wait for thread join
         updateThread.join();
+        Logger::logToScreen("ClientProgram loop ended");
+
+        safeStop = true;
     }
 };
 

@@ -7,6 +7,8 @@
 #include "../../log/Logger.h"
 #include "../Program.h"
 #include "StateStore.h"
+#include "curses.h"
+#include <signal.h>
 #include <algorithm>
 #include <set>
 #include <tuple>
@@ -15,6 +17,31 @@ class ServerProgram : public Program
 {
 
 private:
+    int maxHeight;
+    int maxWidth;
+    int windowWidth;
+    int windowHeight;
+
+    mutex *drawLock;
+
+    bool updateWinSize()
+    {
+        int h, w;
+        getmaxyx(stdscr, h, w);
+
+        if (h != maxHeight || w != maxWidth)
+        {
+            maxHeight = h;
+            maxWidth = w;
+            windowWidth = maxWidth / 3;
+            windowHeight = maxHeight;
+
+            return true;
+        }
+
+        return false;
+    }
+
     map<tuple<string, int>, StateStore *> clients;
 
     void removeClientIfPresent(string sourceAddress, int clientPort)
@@ -30,6 +57,111 @@ private:
             // delete StateStore
             delete stateStorePtr;
         }
+    }
+
+    void drawInfoWindow(WINDOW *win) const
+    {
+        while (execute)
+        {
+            drawLock->lock();
+
+            wmove(win, 0, 0);
+
+            wprintw(win, "Clients: %d\n\n", clients.size());
+
+            for (auto clientItr = clients.begin(); clientItr != clients.end(); ++clientItr)
+            {
+                auto clientInfo = clientItr->first;
+                auto *store = clientItr->second;
+
+                wprintw(
+                    win,
+                    "Client %s:%d\n\tTemperature: %f \n\tHumidity: %f",
+                    get<0>(clientInfo),
+                    get<1>(clientInfo),
+                    store->getTemperature(),
+                    store->getTemperature());
+            }
+
+            wrefresh(win);
+
+            drawLock->unlock();
+            this_thread::sleep_for(chrono::seconds(1));
+        }
+    }
+
+    void drawMenuWindow(WINDOW *win) const
+    {
+        while (execute)
+        {
+            drawLock->lock();
+
+            wmove(win, 0, 0);
+            wrefresh(win);
+
+            drawLock->unlock();
+            this_thread::sleep_for(chrono::seconds(1));
+        }
+    }
+
+    void drawLogWindow(WINDOW *win) const
+    {
+
+        Logger::setLogDirectToScreen(false);
+
+        vector<string> recentLogs;
+        for (int i = 0; i < 10; i++)
+        {
+            recentLogs.push_back("");
+        }
+        long unsigned int lastLogPosition = 0;
+
+        while (execute)
+        {
+            drawLock->lock();
+
+            wmove(win, 0, 0);
+
+            auto *logQueue = Logger::getQueue();
+            if (logQueue != nullptr)
+            {
+                wrefresh(win);
+
+                while (!logQueue->empty())
+                {
+
+                    auto log = logQueue->front();
+                    recentLogs[lastLogPosition] = "";
+                    for (char c : log)
+                    {
+                        recentLogs[lastLogPosition] += c;
+                    }
+                    logQueue->pop();
+
+                    lastLogPosition += 1;
+                    if (lastLogPosition >= recentLogs.size())
+                    {
+                        lastLogPosition = 0;
+                    }
+                }
+
+                for (long unsigned int i = 0; i < recentLogs.size(); i++)
+                {
+                    long unsigned int relativeIndex = lastLogPosition + i;
+                    if (relativeIndex >= recentLogs.size())
+                        relativeIndex -= recentLogs.size();
+
+                    wprintw(win, "%s\n", recentLogs[relativeIndex].c_str());
+                }
+
+                Logger::logToScreen("test" + to_string(lastLogPosition));
+            }
+
+            drawLock->unlock();
+            this_thread::sleep_for(chrono::seconds(1));
+        }
+
+        Logger::setLogDirectToScreen(true);
     }
 
 protected:
@@ -123,6 +255,8 @@ public:
 
     ~ServerProgram()
     {
+        Logger::logToScreen("Cleaning up ServerProgram");
+
         // delete remaining StateSores
         for (auto it = clients.cbegin(), next_it = it; it != clients.cend(); it = next_it)
         {
@@ -132,6 +266,67 @@ public:
 
             delete ptr;
         }
+
+        Logger::logToScreen("ServerProgram destroyed");
+    }
+
+    void loop()
+    {
+        Logger::logToScreen("ServerProgram loop");
+        initscr();
+        cbreak();
+        noecho();
+        keypad(stdscr, TRUE);
+
+        WINDOW *infoWin = newwin(windowHeight, windowWidth, 0, 0);
+        WINDOW *menuWin = newwin(windowHeight, windowWidth, 0, windowWidth);
+        WINDOW *logWin = newwin(windowHeight, windowWidth, 0, 2 * windowWidth);
+
+        drawLock = new mutex();
+
+        thread infoWinThread = thread(&ServerProgram::drawInfoWindow, this, infoWin);
+        thread menuWinThread = thread(&ServerProgram::drawMenuWindow, this, menuWin);
+        thread logWinThread = thread(&ServerProgram::drawLogWindow, this, logWin);
+
+        while (execute)
+        {
+
+            bool resized = updateWinSize();
+            if (resized)
+            {
+                drawLock->lock();
+
+                wresize(infoWin, windowHeight, windowWidth);
+                mvwin(infoWin, 0, 0);
+
+                wresize(menuWin, windowHeight, windowWidth);
+                mvwin(menuWin, 0, windowWidth);
+
+                wresize(logWin, windowHeight, windowWidth);
+                mvwin(logWin, 0, 2 * windowWidth);
+
+                drawLock->unlock();
+            }
+
+            this_thread::sleep_for(chrono::milliseconds(100));
+        }
+
+        infoWinThread.join();
+        menuWinThread.join();
+        logWinThread.join();
+
+        delwin(infoWin);
+        delwin(menuWin);
+        delwin(logWin);
+
+        delete drawLock;
+
+        refresh();
+
+        endwin();
+        Logger::logToScreen("ServerProgram loop ended");
+
+        safeStop = true;
     }
 };
 

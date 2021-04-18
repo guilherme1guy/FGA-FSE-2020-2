@@ -5,11 +5,13 @@
 #include "program/Program.h"
 #include "program/client/ClientProgram.h"
 #include "program/server/ServerProgram.h"
+#include "curses.h"
 
 using namespace std;
 
 Program *p;
 mutex exit_lock;
+int SIGINT_COUNT = 0;
 
 static void quit(int sig)
 {
@@ -17,6 +19,9 @@ static void quit(int sig)
     // this lock will never be release, because the program will end
     // after it is obtained
     bool hasLock = exit_lock.try_lock();
+
+    if (sig == SIGINT)
+        SIGINT_COUNT += 1;
 
     if (hasLock)
     {
@@ -34,7 +39,12 @@ static void quit(int sig)
     }
     else
     {
-        Logger::logToScreen("An exit operation is already in progress");
+        Logger::logToScreen("An exit operation is already in progress, killing...");
+
+        if (SIGINT_COUNT > 1)
+        {
+            exit(-1);
+        }
     }
 }
 
@@ -88,10 +98,10 @@ int main(int argc, const char *argv[])
         invalid_command();
     }
 
-    // starts program loop
-    p->loop();
+    while (p)
+    {
+        this_thread::sleep_for(chrono::seconds(1));
+    }
 
     quit(0);
-
-    return 0;
 }

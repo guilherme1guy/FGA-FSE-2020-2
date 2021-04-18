@@ -28,9 +28,19 @@ public:
 
     ~StateStore() = default;
 
+    float getTemperature()
+    {
+        return temperature;
+    }
+
     void setTemperature(float t)
     {
         temperature = t;
+    }
+
+    float getHumidity()
+    {
+        return humidity;
     }
 
     void setHumidity(float h)

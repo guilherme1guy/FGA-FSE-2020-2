@@ -16,26 +16,29 @@
 
 using namespace std;
 
-class Logger final
+void *globalLogger = nullptr;
+
+class Logger
 {
 
 private:
     LogWriter *loggerWriter;
+    bool logDirectToScreen;
+    queue<string> logQueue;
 
-    // SINGLETON PATTERN
-    static Logger *instance_;
-
-    // private constructor
     Logger()
     {
+        logDirectToScreen = true;
         loggerWriter = new LogWriter();
     }
 
     ~Logger()
     {
         delete loggerWriter;
+
+        loggerWriter = nullptr;
+        globalLogger = nullptr;
     }
-    // END OF SINGLETON PATTERN
 
 protected:
     static string getPrefix()
@@ -70,37 +73,44 @@ protected:
 
 public:
     // SINGLETON PATTERN
-    // reference: https://github.com/hnrck/singleton_example
+
     static Logger *getInstance()
     {
 
-        if (Logger::instance_ == nullptr)
+        if (globalLogger == nullptr)
         {
-            Logger::instance_ = new Logger();
+            globalLogger = new Logger();
         }
 
-        return Logger::instance_;
+        return (Logger *)globalLogger;
     }
 
-    // Deleted copy constructor.
-    // Only the getInstance class method is allowed to give a logger.
-    Logger(const Logger &) = delete;
-    // Deleted copy assignment.
-    // Only the getInstance class method is allowed to give a logger.
-    void operator=(const Logger &) = delete;
-    // Default move constructor.
-    Logger(Logger &&) noexcept = default;
-    // Default move assignment.
-    Logger &operator=(Logger &&) noexcept = default;
-    // END OF SINGLETON PATTERN
-
-    static void logToScreen(const string &log_text)
+    static void setLogDirectToScreen(bool value)
     {
-        stringstream s;
-        s << getPrefix();
-        s << log_text << '\n';
+        Logger *l = getInstance();
+        l->logDirectToScreen = value;
+    }
 
-        cout << s.str();
+    static queue<string> *getQueue()
+    {
+        return &getInstance()->logQueue;
+    }
+
+    static void logToScreen(string logText)
+    {
+        if (getInstance()->logDirectToScreen)
+        {
+
+            stringstream s;
+            s << getPrefix();
+            s << logText << '\n';
+
+            cout << s.str();
+        }
+        else
+        {
+            getInstance()->logQueue.push(logText);
+        }
     }
 
     static void logToFile(const string &text)
