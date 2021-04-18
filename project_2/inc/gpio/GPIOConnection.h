@@ -24,12 +24,14 @@ public:
     static const int GPIO_INPUT = INPUT;
     static const int GPIO_OUTPUT = OUTPUT;
 
+    static const int ON_VALUE = 100;
+    static const int OFF_VALUE = 0;
+
     GPIOConnection(int pin, int mode)
     {
 
         this->pin = pin;
         this->mode = mode;
-        this->value = 0;
 
         // uses GPIO through softPwm from wiringPI
         // src: https://projects.drogon.net/raspberry-pi/wiringpi/software-pwm-library/
@@ -41,7 +43,8 @@ public:
         softPwmCreate(pin, 1, 100);
 
         // always initialize at value 0
-        setValue(0);
+        this->value = OFF_VALUE;
+        setValue(OFF_VALUE);
     }
 
     ~GPIOConnection()

@@ -36,11 +36,16 @@ public:
         return Message(Constants::ALARM_ALERT, to_string(sensorID));
     }
 
-    static Message updateMessage(float temperature, float humidity)
+    static Message updateMessage(int clientPort, float temperature, float humidity)
     {
         return Message(
             Constants::UPDATE,
-            BMEDataEncoder::encodeTemperatureHumidity(temperature, humidity));
+            BMEDataEncoder::encodeTemperatureHumidity(clientPort, temperature, humidity));
+    }
+
+    static Message changeStateMessage(int device)
+    {
+        return Message(Constants::CHANGESTATE, to_string(device));
     }
 };
 

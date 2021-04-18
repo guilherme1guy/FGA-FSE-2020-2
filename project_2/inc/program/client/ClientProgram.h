@@ -23,9 +23,44 @@ private:
     map<int, GPIOConnection *> outputGpioDevices;
     vector<AlarmWatchdog *> alarmWatchdogs;
 
+    void setupGpio()
+    {
+        vector<int> inputDevices = Constants::getInputDevices();
+        vector<int> outputDevices = Constants::getOutputDevices();
+
+        // initialize gpio devices
+        for (int device : inputDevices)
+        {
+            inputGpioDevices[device] = new GPIOConnection(device, GPIOConnection::GPIO_INPUT);
+        }
+
+        for (int device : outputDevices)
+        {
+            outputGpioDevices[device] = new GPIOConnection(device, GPIOConnection::GPIO_OUTPUT);
+        }
+    }
+
+    void resetGpioValues()
+    {
+        for (auto device : Constants::getOutputDevices())
+        {
+            outputGpioDevices[device]->setValue(GPIOConnection::OFF_VALUE);
+        }
+    }
+
     Client getClient()
     {
         return Client(masterIP, masterPort);
+    }
+
+    void identifyOnServer(bool reset)
+    {
+        if (reset)
+        {
+            resetGpioValues();
+        }
+
+        identifyOnServer();
     }
 
     void identifyOnServer()
@@ -64,8 +99,14 @@ private:
 
             auto i2cValues = bme.getData();
 
-            Message m = MessageCreator::updateMessage(get<0>(i2cValues), get<2>(i2cValues));
-            t->getClient().sendMessage(m.encode());
+            Message m = MessageCreator::updateMessage(
+                t->server->getServerPort(), get<0>(i2cValues), get<2>(i2cValues));
+            auto r = t->getClient().sendMessage(m.encode());
+
+            if (r.type == Constants::ERROR)
+            {
+                t->identifyOnServer(true);
+            }
 
             auto s = chrono::duration_cast<chrono::seconds>(now.time_since_epoch());
             auto next_wake = chrono::system_clock::time_point(++s);
@@ -73,12 +114,38 @@ private:
         }
     }
 
+    string doChangeState(Message m)
+    {
+        int device = atoi(m.data.c_str());
+
+        if (this->outputGpioDevices.find(device) != this->outputGpioDevices.end())
+        {
+
+            auto gpioDevice = this->outputGpioDevices[device];
+
+            int value = gpioDevice->getValue();
+            int new_value = (value == GPIOConnection::OFF_VALUE) ? GPIOConnection::ON_VALUE : GPIOConnection::OFF_VALUE;
+
+            gpioDevice->setValue(new_value);
+
+            return MessageCreator::ackMessage().encode();
+        }
+
+        return MessageCreator::errorMessage().encode();
+    }
+
 protected:
     string _handleMessage(Message message)
     {
-        Logger::logToScreen("Client Handling message");
+        switch (message.type)
+        {
+        case Constants::CHANGESTATE:
+            return doChangeState(message);
+        default:
+            break;
+        }
 
-        return "";
+        return MessageCreator::ackMessage().encode();
     }
 
 public:
@@ -127,25 +194,12 @@ public:
 
     void loop()
     {
+        setupGpio();
         identifyOnServer();
-        Logger::logToScreen("Successfully identified...");
-
-        vector<int> inputDevices = Constants::getInputDevices();
-        vector<int> outputDevices = Constants::getOutputDevices();
-
-        // initialize gpio devices
-        for (int device : inputDevices)
-        {
-            inputGpioDevices[device] = new GPIOConnection(device, GPIOConnection::GPIO_INPUT);
-        }
-
-        for (int device : outputDevices)
-        {
-            outputGpioDevices[device] = new GPIOConnection(device, GPIOConnection::GPIO_OUTPUT);
-        }
+        Logger::logToScreen("Successfully identified on server...");
 
         // Setup alarm watchdog
-        for (int device : inputDevices)
+        for (int device : Constants::getInputDevices())
         {
             Client *c = new Client(masterIP, masterPort);
             AlarmWatchdog *alarmWatchdog = new AlarmWatchdog(inputGpioDevices[device], c);

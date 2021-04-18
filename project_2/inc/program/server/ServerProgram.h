@@ -6,6 +6,7 @@
 #include "../../i2c/BMEDataEncoder.h"
 #include "../../log/Logger.h"
 #include "../Program.h"
+#include "StateStore.h"
 #include <algorithm>
 #include <set>
 #include <tuple>
@@ -14,7 +15,22 @@ class ServerProgram : public Program
 {
 
 private:
-    set<tuple<string, int>> clients;
+    map<tuple<string, int>, StateStore *> clients;
+
+    void removeClientIfPresent(string sourceAddress, int clientPort)
+    {
+        auto t = make_tuple(sourceAddress, clientPort);
+        if (clients.find(t) != clients.end())
+        {
+            auto *stateStorePtr = clients[t];
+
+            // remove client
+            clients.erase(t);
+
+            // delete StateStore
+            delete stateStorePtr;
+        }
+    }
 
 protected:
     string doIdentify(Message message)
@@ -22,7 +38,10 @@ protected:
         string sourceAddress = message.getSourceAddress();
         int port = atoi(message.data.c_str());
 
-        clients.insert(make_tuple(sourceAddress, port));
+        // if client is reconnecting, remove previous StateStore
+        removeClientIfPresent(sourceAddress, port);
+
+        clients[make_tuple(sourceAddress, port)] = new StateStore();
 
         Logger::logToScreen("Client " + sourceAddress + ":" + to_string(port) + " connected");
 
@@ -34,11 +53,7 @@ protected:
         string sourceAddress = message.getSourceAddress();
         int port = atoi(message.data.c_str());
 
-        auto t = make_tuple(sourceAddress, port);
-        if (clients.find(t) != clients.end())
-        {
-            clients.erase(t);
-        }
+        removeClientIfPresent(sourceAddress, port);
 
         Logger::logToScreen("Client " + sourceAddress + ":" + message.data + " disconnected");
 
@@ -60,6 +75,22 @@ protected:
     string doUpdateTemperatureHumidity(Message m)
     {
         auto values = BMEDataEncoder::decodeTemperatureHumidity(m.data);
+
+        int clientPort = get<0>(values);
+        string sourceAddress = m.getSourceAddress();
+        auto t = make_tuple(sourceAddress, clientPort);
+
+        if (clients.find(t) == clients.end())
+        {
+            Logger::logToScreen(
+                "Error: Client " + sourceAddress + ":" + to_string(clientPort) +
+                " tried to update before identifying");
+
+            return MessageCreator::errorMessage().encode();
+        }
+
+        clients[t]->setTemperature(get<1>(values));
+        clients[t]->setHumidity(get<2>(values));
 
         return MessageCreator::ackMessage().encode();
     }
@@ -88,6 +119,19 @@ public:
 
         server = new Server(inboundPort);
         server->start(Program::handleMessage, (void *)this);
+    }
+
+    ~ServerProgram()
+    {
+        // delete remaining StateSores
+        for (auto it = clients.cbegin(), next_it = it; it != clients.cend(); it = next_it)
+        {
+            ++next_it;
+            auto *ptr = it->second;
+            clients.erase(it);
+
+            delete ptr;
+        }
     }
 };
 
