@@ -1,15 +1,15 @@
 #ifndef PROJECT_2_CLIENTPROGRAM_H
 #define PROJECT_2_CLIENTPROGRAM_H
 
-#include "Program.h"
-#include "connection/Message.h"
-#include "connection/MessageCreator.h"
-#include "gpio/GPIOConnection.h"
-#include "i2c/BMEManager.h"
+#include "../../connection/Message.h"
+#include "../../connection/MessageCreator.h"
+#include "../../gpio/AlarmWatchdog.h"
+#include "../../gpio/GPIOConnection.h"
+#include "../../i2c/BMEManager.h"
+#include "../Program.h"
 #include <map>
-#include <vector>
 #include <thread>
-#include "gpio/AlarmWatchdog.h"
+#include <vector>
 
 class ClientProgram : public Program
 {

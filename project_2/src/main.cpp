@@ -2,9 +2,9 @@
 #include <string>
 #include <mutex>
 
-#include "program/ClientProgram.h"
 #include "program/Program.h"
-#include "program/ServerProgram.h"
+#include "program/client/ClientProgram.h"
+#include "program/server/ServerProgram.h"
 
 using namespace std;
 

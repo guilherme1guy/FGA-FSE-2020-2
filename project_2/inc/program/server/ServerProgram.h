@@ -1,11 +1,11 @@
 #ifndef PROJECT_2_SERVERPROGRAM_H
 #define PROJECT_2_SERVERPROGRAM_H
 
-#include "Program.h"
-#include "connection/Message.h"
-#include "connection/MessageCreator.h"
-#include "i2c/BMEDataEncoder.h"
-#include "log/Logger.h"
+#include "../../connection/Message.h"
+#include "../../connection/MessageCreator.h"
+#include "../../i2c/BMEDataEncoder.h"
+#include "../../log/Logger.h"
+#include "../Program.h"
 #include <algorithm>
 #include <set>
 #include <tuple>
