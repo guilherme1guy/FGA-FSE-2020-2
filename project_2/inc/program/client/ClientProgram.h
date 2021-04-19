@@ -205,7 +205,7 @@ public:
 
     void loop()
     {
-        //setupGpio();
+        setupGpio();
         identifyOnServer();
         Logger::logToScreen("Successfully identified on server...");
 
