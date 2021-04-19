@@ -4,6 +4,7 @@
 #include "Message.h"
 #include "Constants.h"
 #include "i2c/BMEDataEncoder.h"
+#include "gpio/AlarmDataEncoder.h"
 
 using namespace std;
 
@@ -31,9 +32,9 @@ public:
         return Message(Constants::DISCONNECT, to_string(clientPort));
     }
 
-    static Message alarmAlertMessage(int sensorID)
+    static Message alarmAlertMessage(int sensorID, int clientPort)
     {
-        return Message(Constants::ALARM_ALERT, to_string(sensorID));
+        return Message(Constants::ALARM_ALERT, AlarmDataEncoder::encodeAlarm(clientPort, sensorID));
     }
 
     static Message updateMessage(int clientPort, float temperature, float humidity)

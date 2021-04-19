@@ -15,6 +15,7 @@ class AlarmWatchdog
 private:
     GPIOConnection *connection;
     Client *client;
+    int identifier;
 
     static map<int, AlarmWatchdog *> handlers;
 
@@ -65,7 +66,7 @@ private:
 
         // TODO: execute calculations and checks
 
-        Message m = MessageCreator::alarmAlertMessage(this->connection->getPin());
+        Message m = MessageCreator::alarmAlertMessage(this->connection->getPin(), this->identifier);
 
         int rType;
         // keep sending until server ACK
@@ -78,7 +79,7 @@ private:
     }
 
 public:
-    AlarmWatchdog(GPIOConnection *connection, Client *c)
+    AlarmWatchdog(GPIOConnection *connection, Client *c, int identifier)
     {
 
         map<int, void (*)()> functions = {
@@ -91,6 +92,7 @@ public:
 
         this->connection = connection;
         this->client = c;
+        this->identifier = identifier;
 
         int pin = connection->getPin();
 

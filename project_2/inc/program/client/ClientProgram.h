@@ -213,7 +213,8 @@ public:
         for (int device : Constants::getInputDevices())
         {
             Client *c = new Client(masterIP, masterPort);
-            AlarmWatchdog *alarmWatchdog = new AlarmWatchdog(inputGpioDevices[device], c);
+            AlarmWatchdog *alarmWatchdog = new AlarmWatchdog(
+                inputGpioDevices[device], c, this->server->getServerPort());
 
             alarmWatchdogs.push_back(alarmWatchdog);
         }

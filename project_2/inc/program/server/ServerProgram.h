@@ -4,6 +4,7 @@
 #include "../../connection/Message.h"
 #include "../../connection/MessageCreator.h"
 #include "../../i2c/BMEDataEncoder.h"
+#include "../../gpio/AlarmDataEncoder.h"
 #include "../../log/Logger.h"
 #include "../Program.h"
 #include "StateStore.h"
@@ -13,6 +14,7 @@
 #include <set>
 #include <sstream>
 #include <tuple>
+#include <unistd.h>
 
 class ServerProgram : public Program
 {
@@ -429,12 +431,30 @@ protected:
 
     string doAlarmAlert(Message m)
     {
+        auto alertData = AlarmDataEncoder::decodeAlarm(m.data);
+        int clientPort = get<0>(alertData);
+        int activatedSensor = get<1>(alertData);
 
-        int activatedSensor = atoi(m.data.c_str());
+        string sourceAddress = m.getSourceAddress();
 
-        Logger::logToScreen("Sensor " + Constants::getSensorLocation(activatedSensor) + " Activated!");
+        auto client = make_tuple(sourceAddress, clientPort);
 
-        // TODO: check if alarms are enabled and play mp3
+        auto activateAlarm = clients[client]->getAlarmEnabled();
+
+        if (activateAlarm)
+        {
+            Logger::logToScreen("Sensor " + Constants::getSensorLocation(activatedSensor) + " Activated!");
+
+            char *cwd = getcwd(NULL, 0);
+
+            stringstream alarmCommand;
+            alarmCommand << "aplay " << cwd << "/src/resource/beep.mp3 -q";
+            system(alarmCommand.str().c_str());
+
+            Logger::logToScreen(alarmCommand.str());
+
+            free(cwd);
+        }
 
         return MessageCreator::ackMessage().encode();
     }
