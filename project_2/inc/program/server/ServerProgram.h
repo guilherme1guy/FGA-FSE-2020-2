@@ -248,6 +248,11 @@ private:
                             selected_client = clientVector[option - '0' - 1];
                             hasSelectedClient = true;
                             currentMenuMode = MAIN_MENU;
+
+                            Logger::logToFile(
+                                Logger::getFormattedDate() +
+                                ", selectClient, " +
+                                get<0>(selected_client) + ":" + to_string(get<1>(selected_client)));
                         }
                     }
                 }
@@ -315,6 +320,16 @@ private:
                                     Constants::getDeviceName(selected_device) +
                                     " State";
                             }
+
+                            Logger::logToFile(
+                                Logger::getFormattedDate() +
+                                ", changeState, " +
+                                get<0>(selected_client) + ":" + to_string(get<1>(selected_client)) +
+                                ", " + Constants::getDeviceName(selected_device) +
+                                ", " + storePtr->getDeviceStateString(selected_device) +
+                                (r.type == Constants::ACK
+                                     ? ", OK"
+                                     : ", Error"));
                         }
                     }
                 }
@@ -326,6 +341,12 @@ private:
 
                 announcement = "Set alarm to " + storePtr->getAlarmEnabled() ? "ON" : "OFF";
                 currentMenuMode = MAIN_MENU;
+
+                Logger::logToFile(
+                    Logger::getFormattedDate() +
+                    ", alarmWatch, " +
+                    get<0>(selected_client) + ":" + to_string(get<1>(selected_client)) +
+                    ", " + (storePtr->getAlarmEnabled() ? "ON" : "OFF"));
             }
             else if (currentMenuMode == QUIT_MENU)
             {
@@ -454,6 +475,8 @@ protected:
             Logger::logToScreen(alarmCommand.str());
 
             free(cwd);
+
+            Logger::logToFile(Logger::getFormattedDate() + ", alarmON, " + Constants::getSensorLocation(activatedSensor));
         }
 
         return MessageCreator::ackMessage().encode();

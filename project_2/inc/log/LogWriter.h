@@ -52,7 +52,7 @@ private:
             string line = fileBuffer.front();
             fileBuffer.pop();
 
-            file << line;
+            file << line << endl;
         }
 
         file.close();

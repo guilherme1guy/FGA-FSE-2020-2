@@ -98,18 +98,21 @@ public:
         if (serverSocket < 0)
         {
             Logger::logToScreen("Error opening server socket");
+            cerr << "Error opening socket";
             exit(-1);
         }
 
         if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
         {
             Logger::logToScreen("Error binding server address");
+            cerr << "Error binding server address";
             exit(-1);
         }
 
         if (listen(serverSocket, 10) < 0)
         {
             Logger::logToScreen("Error on listening");
+            cerr << "Error on listening";
             exit(-1);
         }
 

@@ -65,6 +65,7 @@ protected:
         return s_prefix.str();
     }
 
+public:
     static string getFormattedDate()
     {
         // returns current time as a string:
@@ -81,7 +82,6 @@ protected:
         return time_str;
     }
 
-public:
     // SINGLETON PATTERN
 
     static Logger *getInstance()
