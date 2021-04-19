@@ -13,6 +13,8 @@ class StateStore
     float temperature;
     float humidity;
 
+    bool alarmEnabled = false;
+
     map<int, int> outputDevicesStates;
 
 public:
@@ -53,9 +55,45 @@ public:
         return outputDevicesStates[device];
     }
 
+    string getDeviceStateString(int device)
+    {
+        auto state = getDeviceState(device);
+
+        if (state == GPIOConnection::ON_VALUE)
+        {
+            return "ON";
+        }
+        else
+        {
+            return "OFF";
+        }
+    }
+
+    int invertState(int state)
+    {
+        if (state == GPIOConnection::ON_VALUE)
+        {
+            return GPIOConnection::OFF_VALUE;
+        }
+        else
+        {
+            return GPIOConnection::ON_VALUE;
+        }
+    }
+
     void setDeviceState(int device, int state)
     {
         outputDevicesStates[device] = state;
+    }
+
+    bool getAlarmEnabled()
+    {
+        return alarmEnabled;
+    }
+
+    void setAlarmEnabled(int value)
+    {
+        alarmEnabled = value;
     }
 };
 

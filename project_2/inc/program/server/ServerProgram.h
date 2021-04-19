@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <algorithm>
 #include <set>
+#include <sstream>
 #include <tuple>
 
 class ServerProgram : public Program
@@ -74,33 +75,267 @@ private:
                 auto clientInfo = clientItr->first;
                 auto *store = clientItr->second;
 
+                stringstream states;
+
+                for (int device : Constants::getOutputDevices())
+                {
+                    states << "\t\t" << Constants::getDeviceName(device) << ": ";
+
+                    if (store->getDeviceState(device) == GPIOConnection::ON_VALUE)
+                    {
+                        states << "ON";
+                    }
+                    else
+                    {
+                        states << "OFF";
+                    }
+
+                    states << "\n\
+                    ";
+                }
+
                 wprintw(
                     win,
-                    "Client %s:%d\n\tTemperature: %f \n\tHumidity: %f",
-                    get<0>(clientInfo),
+                    "Client %s:%d\n\
+                    \tTemperature: %0.2fºC \n\
+                    \tHumidity: %0.2f\n\
+                    \tAlarm: %s\n\
+                    \tStates: \n\
+                    %s",
+                    get<0>(clientInfo).c_str(),
                     get<1>(clientInfo),
                     store->getTemperature(),
-                    store->getTemperature());
+                    store->getTemperature(),
+                    store->getAlarmEnabled() ? "ON" : "OFF",
+                    states.str().c_str());
             }
 
             wrefresh(win);
+            wclear(win);
 
             drawLock->unlock();
             this_thread::sleep_for(chrono::seconds(1));
         }
     }
 
-    void drawMenuWindow(WINDOW *win) const
+    void drawMenuWindow(WINDOW *win, ServerProgram *p) const
     {
-        while (execute)
+        tuple<string, int> selected_client = make_tuple("", -1);
+        bool hasSelectedClient = false;
+
+        const int MAIN_MENU = 0;
+        const int SELECT_CLIENT = 1;
+        const int CHANGE_STATE = 2;
+        const int CHANGE_ALARM_STATE = 4;
+        const int QUIT_MENU = 5;
+
+        int currentMenuMode = MAIN_MENU;
+
+        while (p->execute)
         {
             drawLock->lock();
 
             wmove(win, 0, 0);
+
+            // get next char from input buffer
+            // returns ERR if empty
+            char c = getch();
+            string announcement = "";
+
+            wprintw(
+                win,
+                "\t------------------\n\t%s\n\t------------------\n",
+                announcement.c_str());
+
+            if (currentMenuMode == MAIN_MENU)
+            {
+
+                if (!hasSelectedClient)
+                {
+                    wprintw(
+                        win,
+                        "No Client Selected\
+                        \n\nOptions:\
+                        \t\nq - quit\
+                        \t\n1 - Select Client");
+
+                    if (c == '1')
+                    {
+                        currentMenuMode = SELECT_CLIENT;
+                    }
+                    else if (c == 'q')
+                    {
+                        currentMenuMode = QUIT_MENU;
+                    }
+                }
+                else
+                {
+                    wprintw(
+                        win,
+                        "Client: %s:%d\n\t\
+                        Options:\
+                        \t\nq - quit\
+                        \t\n1 - Change Client\
+                        \n\t2 - Change state\
+                        \n\t3 - Change alarm state",
+                        get<0>(selected_client).c_str(),
+                        get<1>(selected_client));
+
+                    if (c == '1')
+                    {
+                        currentMenuMode = SELECT_CLIENT;
+                    }
+                    else if (c == '2')
+                    {
+                        currentMenuMode = CHANGE_STATE;
+                    }
+                    else if (c == '3')
+                    {
+                        currentMenuMode = CHANGE_ALARM_STATE;
+                    }
+                    else if (c == 'q')
+                    {
+                        currentMenuMode = QUIT_MENU;
+                    }
+                }
+            }
+            else if (currentMenuMode == SELECT_CLIENT)
+            {
+
+                stringstream clientsText;
+                int clientNumber = 1;
+                vector<tuple<string, int>> clientVector;
+
+                for (auto clientItr = clients.begin(); clientItr != clients.end(); ++clientItr)
+                {
+                    auto clientInfo = clientItr->first;
+
+                    clientVector.push_back(clientInfo);
+
+                    clientsText
+                        << "\n\t"
+                        << (char)('0' + clientNumber) << " - " << get<0>(clientInfo)
+                        << ":" << to_string(get<1>(clientInfo)) << "\
+                        ";
+
+                    clientNumber++;
+                }
+
+                if (clientNumber == 1)
+                {
+                    clientsText << "\n\n\tNo clients connected";
+                }
+
+                wprintw(
+                    win,
+                    "Select a client\
+                    \n0 - Go Back:\
+                    %s",
+                    clientsText.str().c_str());
+
+                if (c == '0')
+                {
+                    currentMenuMode = MAIN_MENU;
+                }
+                else if (clientNumber > 1)
+                {
+                    for (char option = '0' + clientNumber; option > '0'; option--)
+                    {
+                        if (c == option)
+                        {
+                            selected_client = clientVector[option - '0' - 1];
+                            hasSelectedClient = true;
+                            currentMenuMode = MAIN_MENU;
+                        }
+                    }
+                }
+            }
+            else if (currentMenuMode == CHANGE_STATE)
+            {
+                auto *storePtr = clients.at(selected_client);
+
+                stringstream devicesText;
+                int deviceNumber = 1;
+                vector<int> devicesVector;
+
+                for (auto device : Constants::getOutputDevices())
+                {
+                    auto deviceName = Constants::getDeviceName(device);
+
+                    devicesVector.push_back(device);
+
+                    devicesText
+                        << "\n\t"
+                        << (char)('0' + deviceNumber) << " - " << deviceName
+                        << " (" << storePtr->getDeviceStateString(device) << ")"
+                        << "\
+                        ";
+
+                    deviceNumber++;
+                }
+
+                wprintw(
+                    win,
+                    "Select a device to change state:\
+                    \n0 - Go Back:\
+                    %s",
+                    devicesText.str().c_str());
+
+                if (c == '0')
+                {
+                    currentMenuMode = MAIN_MENU;
+                }
+                else
+                {
+                    for (char option = '0' + deviceNumber; option > '0'; option--)
+                    {
+                        if (c == option)
+                        {
+                            currentMenuMode = MAIN_MENU;
+                            auto selected_device = devicesVector[option - '0' - 1];
+
+                            auto m = MessageCreator::changeStateMessage(selected_device);
+                            Client c = Client(get<0>(selected_client), get<1>(selected_client));
+
+                            auto r = c.sendMessage(m.encode());
+
+                            if (r.type == Constants::ACK)
+                            {
+                                storePtr->setDeviceState(
+                                    selected_device,
+                                    storePtr->invertState(storePtr->getDeviceState(selected_device)));
+                                announcement = "Success";
+                            }
+                            else if (r.type == Constants::ERROR)
+                            {
+                                announcement =
+                                    "There was an error changing " +
+                                    Constants::getDeviceName(selected_device) +
+                                    " State";
+                            }
+                        }
+                    }
+                }
+            }
+            else if (currentMenuMode == CHANGE_ALARM_STATE)
+            {
+                auto *storePtr = clients.at(selected_client);
+                storePtr->setAlarmEnabled(!storePtr->getAlarmEnabled());
+
+                announcement = "Set alarm to " + storePtr->getAlarmEnabled() ? "ON" : "OFF";
+                currentMenuMode = MAIN_MENU;
+            }
+            else if (currentMenuMode == QUIT_MENU)
+            {
+                p->execute = false;
+                Logger::logToScreen("Quitting...");
+            }
+
             wrefresh(win);
+            wclear(win);
 
             drawLock->unlock();
-            this_thread::sleep_for(chrono::seconds(1));
+            this_thread::sleep_for(chrono::milliseconds(250));
         }
     }
 
@@ -125,7 +360,6 @@ private:
             auto *logQueue = Logger::getQueue();
             if (logQueue != nullptr)
             {
-                wrefresh(win);
 
                 while (!logQueue->empty())
                 {
@@ -153,12 +387,13 @@ private:
 
                     wprintw(win, "%s\n", recentLogs[relativeIndex].c_str());
                 }
-
-                Logger::logToScreen("test" + to_string(lastLogPosition));
             }
 
+            wrefresh(win);
+            wclear(win);
+
             drawLock->unlock();
-            this_thread::sleep_for(chrono::seconds(1));
+            this_thread::sleep_for(chrono::milliseconds(250));
         }
 
         Logger::setLogDirectToScreen(true);
@@ -248,6 +483,7 @@ protected:
 public:
     ServerProgram(int inboundPort)
     {
+        Logger::setLogDirectToScreen(false);
 
         server = new Server(inboundPort);
         server->start(Program::handleMessage, (void *)this);
@@ -270,12 +506,24 @@ public:
         Logger::logToScreen("ServerProgram destroyed");
     }
 
+    void createThread()
+    {
+        Logger::logToScreen("Starting Program thread");
+        execute = true;
+
+        if (loopThread == nullptr)
+        {
+            loopThread = new thread(&ServerProgram::loop, this);
+        }
+    }
+
     void loop()
     {
         Logger::logToScreen("ServerProgram loop");
         initscr();
         cbreak();
         noecho();
+        nodelay(stdscr, TRUE);
         keypad(stdscr, TRUE);
 
         WINDOW *infoWin = newwin(windowHeight, windowWidth, 0, 0);
@@ -285,7 +533,7 @@ public:
         drawLock = new mutex();
 
         thread infoWinThread = thread(&ServerProgram::drawInfoWindow, this, infoWin);
-        thread menuWinThread = thread(&ServerProgram::drawMenuWindow, this, menuWin);
+        thread menuWinThread = thread(&ServerProgram::drawMenuWindow, this, menuWin, this);
         thread logWinThread = thread(&ServerProgram::drawLogWindow, this, logWin);
 
         while (execute)

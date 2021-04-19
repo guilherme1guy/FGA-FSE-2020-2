@@ -80,6 +80,7 @@ int main(int argc, const char *argv[])
     {
         int port = atoi(argv[2]);
         p = new ServerProgram(port);
+        p->createThread();
     }
     else if (mode[0] == 'c')
     {
@@ -92,13 +93,14 @@ int main(int argc, const char *argv[])
         int port = atoi(argv[3]);
 
         p = new ClientProgram(ip, port);
+        p->createThread();
     }
     else
     {
         invalid_command();
     }
 
-    while (p)
+    while (p->getExecute())
     {
         this_thread::sleep_for(chrono::seconds(1));
     }

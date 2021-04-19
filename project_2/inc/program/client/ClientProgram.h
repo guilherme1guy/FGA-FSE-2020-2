@@ -192,9 +192,20 @@ public:
         }
     }
 
+    void createThread()
+    {
+        Logger::logToScreen("Starting Program thread");
+        execute = true;
+
+        if (loopThread == nullptr)
+        {
+            loopThread = new thread(&ClientProgram::loop, this);
+        }
+    }
+
     void loop()
     {
-        setupGpio();
+        //setupGpio();
         identifyOnServer();
         Logger::logToScreen("Successfully identified on server...");
 

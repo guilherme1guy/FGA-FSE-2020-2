@@ -70,6 +70,29 @@ public:
     return GPIO_INPUT_DEVICES;
   }
 
+  static string getDeviceName(int device)
+  {
+
+    switch (device)
+    {
+    case GPIO_LAMP_1:
+      return "Kitchen Lamp";
+
+    case GPIO_LAMP_2:
+      return "Living Room Lamp";
+    case GPIO_LAMP_3:
+      return "Room 01 Lamp";
+    case GPIO_LAMP_4:
+      return "Room 02 Lamp";
+    case GPIO_AC_1:
+      return "AC 01";
+    case GPIO_AC_2:
+      return "AC 01";
+    default:
+      return "";
+    }
+  }
+
   static string getSensorLocation(int sensorID)
   {
     switch (sensorID)

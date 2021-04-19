@@ -34,6 +34,16 @@ private:
 
     ~Logger()
     {
+        logDirectToScreen = true;
+
+        // dump logs not shown on scree
+        while (!logQueue.empty())
+        {
+            auto log = logQueue.front();
+            logToScreen(log);
+            logQueue.pop();
+        }
+
         delete loggerWriter;
 
         loggerWriter = nullptr;

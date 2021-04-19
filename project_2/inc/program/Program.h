@@ -44,13 +44,6 @@ protected:
 public:
     Program()
     {
-        Logger::logToScreen("Starting program thread");
-        execute = true;
-
-        if (loopThread == nullptr)
-        {
-            loopThread = new thread(&Program::loop, this);
-        }
     }
 
     virtual ~Program()
@@ -70,6 +63,8 @@ public:
 
         Logger::logToScreen("Program thread ended");
     }
+
+    virtual void createThread() = 0;
 
     static void handleMessage(void *ptr, int clientSocket)
     {
@@ -97,6 +92,11 @@ public:
         }
 
         close(clientSocket);
+    }
+
+    bool getExecute()
+    {
+        return execute;
     }
 };
 
