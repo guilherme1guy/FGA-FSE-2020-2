@@ -1,0 +1,30 @@
+menu "Wifi Configuration"
+
+    config ESP_WIFI_SSID
+        string "WiFi SSID"
+        default "ssid"
+        help
+            Wifi network name.
+
+    config ESP_WIFI_PASSWORD
+        string "Wifi Password"
+        default "password"
+        help
+            WiFi Password (WPA or WPA2).
+
+    config ESP_MAXIMUM_RETRY
+        int "Maximum number of connection attempts"
+        default 5
+        help
+            Configure the maximum number of connection attempts
+endmenu
+
+menu "MQTT Configuration"
+
+    config ESP_MQTT_HOST
+        string "MQTT SSID"
+        default "mqtt://gguy-ideapad.lan"
+        help
+            MQTT hostname
+
+endmenu

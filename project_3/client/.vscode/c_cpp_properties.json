@@ -21,7 +21,21 @@
                     "${workspaceFolder}"
                 ],
                 "limitSymbolsToIncludedHeaders": false
-            }
+            },
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/gguy/.arduino15/packages/esp32/tools/**",
+                "/home/gguy/Arduino/libraries/**",
+                "/home/gguy/prog/arduino-1.8.13/libraries/**",
+                "/home/gguy/.arduino15/packages/esp32/hardware/esp32/1.0.6/**"
+            ],
+            "forcedInclude": [],
+            "defines": [
+                "USBCON"
+            ]
         }
     ],
     "version": 4
