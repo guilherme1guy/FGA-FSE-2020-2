@@ -33,6 +33,8 @@ static const char *TAG = "wifi station";
 
 static int s_retry_num = 0;
 
+extern xSemaphoreHandle wifiSemaphore;
+
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data)
 {
@@ -60,6 +62,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        xSemaphoreGive(wifiSemaphore);
     }
 }
 
@@ -95,7 +98,7 @@ void wifi_init_sta(void)
             /* Setting a password implies station will connect to all security modes including WEP/WPA.
              * However these modes are deprecated and not advisable to be used. Incase your Access point
              * doesn't support WPA2, these mode can be enabled by commenting below line */
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+            //.threshold.authmode = WIFI_AUTH_WPA2_PSK,
 
             .pmf_cfg = {
                 .capable = true,
