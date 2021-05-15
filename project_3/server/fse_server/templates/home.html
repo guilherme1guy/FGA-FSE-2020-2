@@ -93,7 +93,7 @@
 
                 locations_accordion.append(`
 
-                    <div class="accordion-item p-3 show border-1">
+                    <div class="accordion-item p-3 show border">
 
                         <h2 class="accordion-header p-3" id="panelsStayOpen-heading_${name}">
                           <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse_${name}">
@@ -119,13 +119,18 @@
 
                     let device = loc['devices'][did];
 
+                    current_location_row.append(`
+                        <div id="card_dev_${device}" class="card p-3 m-3" style="width: 18rem;">
+                        </div>
+                    `);
+
                     $.ajax({
                         type: 'GET',
                         url: `/api/device/${device}`,
                         success: function (res) {
 
-                            current_location_row.append(`
-                            <div class="card p-3" style="width: 18rem;">
+                            $(`#card_dev_${device}`).append(`
+                            
                                 <div class="card-body">
                                     <h5 class="card-title">${device}</h5>
                                     
@@ -136,7 +141,7 @@
 
                                     <a href="${get_detail_url(device)}" class="btn btn-primary">More...</a>
                                 </div>
-                            </div>
+                           
                             `
                             );
 
