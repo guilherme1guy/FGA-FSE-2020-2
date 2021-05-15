@@ -13,9 +13,33 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from fse_server.forms import DeviceForm
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+from rest_framework import routers
+
+from fse_server import views
+
+
+router = routers.DefaultRouter()
+router.register(r"register_request", views.RegisterRequestViewSet)
+router.register(r"device", views.DeviceViewSet)
+router.register(r"location", views.LocationViewSet)
+
+static_urls = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-]
+    path("", views.MainView.as_view(), name="main"),
+    path(
+        "register/<str:id>",
+        views.DeviceFormView.as_view(),
+        name="register_device_form",
+    ),
+    path("device/<str:pk>", views.DeviceDetailView.as_view(), name="device_detail"),
+    path("admin/", admin.site.urls),
+    path("api/", include("rest_framework.urls", namespace="rest_framework")),
+    path("api/", include(router.urls)),
+] + static_urls

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row p-3" id="register_request_row">
+
+    <div class="col-3">
+        ....
+    </div>
+
+</div>
+
+<div class="row p-3" id="locations_row">
+
+    <div class="col-3">
+        ....
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+{%block js%}
+
+<script>
+
+    function get_registration_url(id) {
+        const _text = "{% url 'register_device_form' 'DEVICE_ID' %}"
+        return _text.replace("DEVICE_ID", id);
+    }
+
+    function get_detail_url(id) {
+        const _text = "{% url 'device_detail' 'DEVICE_ID' %}"
+        return _text.replace("DEVICE_ID", id);
+    }
+
+
+    function update_register_requests() {
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/register_request',
+            success: function (res) {
+
+                let row = $('#register_request_row');
+                row.empty();
+
+                for (register_request in res) {
+
+                    let data = res[register_request];
+
+                    row.append(`
+                    <div class="card p-3" style="width: 18rem;">
+                        <div class="card-body">
+                            <h5 class="card-title">${data["id"]}</h5>
+                            <a href="${get_registration_url(data["id"])}" class="btn btn-primary">Register</a>
+                        </div>
+                    </div>
+                    `
+                    );
+                }
+
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+
+    }
+
+
+    function update_devices() {
+
+        function process_locations(res) {
+
+            let locations_row = $('#locations_row');
+            locations_row.empty();
+
+            locations_row.append(`
+            <div class="accordion" id="locations_accordion">
+            
+            </div>
+            `);
+
+            let locations_accordion = $('#locations_accordion');
+
+            for (rid in res) {
+
+                let loc = res[rid];
+
+                let name = loc['name'];
+
+                locations_accordion.append(`
+
+                    <div class="accordion-item p-3 show border-1">
+
+                        <h2 class="accordion-header p-3" id="panelsStayOpen-heading_${name}">
+                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse_${name}">
+                                Location: ${name}
+                          </button>
+                        </h2>
+
+                        <div id="panelsStayOpen-collapse_${name}" class="accordion-collapse collapse show">
+                          <div class="accordion-body p-3" id="location_accordion_content">
+                            <div class="row" id="location_${name}">
+
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                `);
+
+                let current_location_row = $(`#location_${name}`);
+
+                // each location can have many devices
+                for (did in loc['devices']) {
+
+                    let device = loc['devices'][did];
+
+                    $.ajax({
+                        type: 'GET',
+                        url: `/api/device/${device}`,
+                        success: function (res) {
+
+                            current_location_row.append(`
+                            <div class="card p-3" style="width: 18rem;">
+                                <div class="card-body">
+                                    <h5 class="card-title">${device}</h5>
+                                    
+                                    <ul>
+                                        <li>Temperature: ${res['last_temperature']}</li>
+                                        <li>Humidity: ${res['last_humidity']}</li>
+                                    </ul>
+
+                                    <a href="${get_detail_url(device)}" class="btn btn-primary">More...</a>
+                                </div>
+                            </div>
+                            `
+                            );
+
+                        },
+                        error: function (error) {
+                            console.log(error);
+                        }
+                    });
+
+                }
+            }
+        }
+
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/location',
+            success: process_locations,
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    function page_loop() {
+
+        update_register_requests();
+        update_devices();
+
+    }
+
+    page_loop();
+    setInterval(page_loop, 2000);
+
+</script>
+
+{% endblock %}

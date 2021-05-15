@@ -1,4 +1,7 @@
 .venv
 __pycache__/
+target/
 .vscode
+.idea
 db.sqlite3
+staticfiles/

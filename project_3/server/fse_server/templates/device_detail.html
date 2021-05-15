@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row">
+
+    <div class="col">
+
+        <h3>Device info:</h3>
+
+
+        <ul>
+
+        <li>Mac Address: {{object.id}} </li>
+        <li>DHT: {{object.is_dht_present}} </li>
+        
+        <li>Temperature: {{object.last_temperature}} </li>
+        <li>Humidity: {{object.last_humidity}} </li>
+        <li>Updated at: {{object.last_update}} </li>
+                
+        <li>Location: {{object.location.name}} </li>
+        
+        </ul>
+
+        <h3>Inputs</h3>
+
+        <table class="table">
+
+            <tr>
+                <th>Name</th>
+                <th>GPIO</th>
+                <th>Last State</th>
+            </tr>
+
+        {% for input in object.inputs.all %}
+            <tr>
+                <td>{{input.name}}</td>
+                <td>{{input.gpio_id}}</td>
+                <td>{{input.last_state}}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td>No inputs registered</td>
+            </tr>
+        {% endfor %}
+
+        </table>
+
+
+        <h3>Outputs</h3>
+
+        <table class="table">
+
+            <tr>
+                <th>Name</th>
+                <th>GPIO</th>
+                <th>Last State</th>
+                <th>Action</th>
+            </tr>
+
+        {% for input in object.outputs.all %}
+            <tr>
+                <td>{{input.name}}</td>
+                <td>{{input.gpio_id}}</td>
+                <td>{{input.last_state}}</td>
+                <td><a href="#">Change State</a></td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td>No outputs registered</td>
+            </tr>
+        {% endfor %}
+
+        </table>
+
+    </div>
+
+
+</div>
+
+{% endblock %}
