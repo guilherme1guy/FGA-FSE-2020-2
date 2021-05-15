@@ -125,13 +125,13 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 CONFIG_ESP_WIFI_SSID="CasaW"
 CONFIG_ESP_WIFI_PASSWORD="39640144"
-CONFIG_ESP_MAXIMUM_RETRY=10
+CONFIG_ESP_MAXIMUM_RETRY=5
 # end of Wifi Configuration
 
 #
 # MQTT Configuration
 #
-CONFIG_ESP_MQTT_HOST="mqtt://gguy-ideapad.lan"
+CONFIG_ESP_MQTT_HOST="mqtt://test.mosquitto.org:1883"
 # end of MQTT Configuration
 
 #
