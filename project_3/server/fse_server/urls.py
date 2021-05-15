@@ -39,6 +39,11 @@ urlpatterns = [
         name="register_device_form",
     ),
     path("device/<str:pk>", views.DeviceDetailView.as_view(), name="device_detail"),
+    path(
+        "device/~delete/<str:pk>",
+        views.DeviceDeleteView.as_view(),
+        name="device_delete",
+    ),
     path("admin/", admin.site.urls),
     path("api/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/", include(router.urls)),
