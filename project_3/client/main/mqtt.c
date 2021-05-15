@@ -25,6 +25,7 @@
 #define MQTT_HOST CONFIG_ESP_MQTT_HOST
 
 extern xSemaphoreHandle MQTTSemaphore;
+extern void handle_mqtt_event(char *, int);
 esp_mqtt_client_handle_t client;
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
@@ -56,6 +57,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
+        handle_mqtt_event(event->data, event->data_len);
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -64,6 +66,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         ESP_LOGI(TAG, "Other event id:%d", event->event_id);
         break;
     }
+
     return ESP_OK;
 }
 
@@ -75,6 +78,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 void mqtt_start()
 {
+    printf("Starting MQTT\n");
+
     esp_mqtt_client_config_t mqtt_config = {
         .uri = MQTT_HOST,
     };
@@ -87,4 +92,9 @@ void mqtt_send_message(char *topic, char *message)
 {
     int message_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
     ESP_LOGI(TAG, "Sent message ID: %d", message_id);
+}
+
+void mqtt_subscribe_topic(char *topic)
+{
+    esp_mqtt_client_subscribe(client, topic, 1);
 }
