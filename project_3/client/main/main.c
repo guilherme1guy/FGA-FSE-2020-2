@@ -7,6 +7,8 @@
 #include "esp_log.h"
 #include "freertos/semphr.h"
 
+#include "cJSON.h"
+
 #include "wifi.h"
 #include "mqtt.h"
 
