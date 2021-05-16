@@ -1,8 +1,9 @@
-from datetime import timedelta
 from django.db import models
 from django.core import validators
-from django.db.models.deletion import CASCADE, DO_NOTHING, RESTRICT
+from django.db.models.deletion import CASCADE, RESTRICT
 from django.utils import timezone
+from django.utils import timezone
+from django.db import OperationalError
 
 
 class Location(models.Model):
@@ -67,6 +68,30 @@ class Device(models.Model):
     last_update = models.DateTimeField(auto_now=True)
 
     location = models.ForeignKey(Location, on_delete=RESTRICT, related_name="devices")
+
+    def _save_sensor_value(self, field, value):
+
+        if value < 0:
+            # ignore negative values, since they are an error in
+            # the sensor reading
+            return
+
+        setattr(self, field, value)
+        self.last_update = timezone.now()
+
+        # sometimes mqtt starts before django properly configured
+        # the database, we can ignore this error since the device
+        # will send new data soon
+        try:
+            self.save()
+        except OperationalError:
+            pass  # do nothing
+
+    def set_temperature(self, value):
+        self._save_sensor_value("last_temperature", value)
+
+    def set_humidity(self, value):
+        self._save_sensor_value("last_humidity", value)
 
 
 class DeviceInput(models.Model):

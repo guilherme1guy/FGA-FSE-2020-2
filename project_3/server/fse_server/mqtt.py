@@ -1,12 +1,8 @@
-from django.db.models.lookups import IContains
-from django.utils import timezone
 import paho.mqtt.client as mqtt
-from django.db import OperationalError
 
 import json
 import os
 import django
-from rest_framework.fields import DictField
 
 # allows importing Models and Settings from django from
 # the script part at the end of the file
@@ -90,20 +86,11 @@ def route_location(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
         return
 
     if topic_structure[3] == "temperatura":
-        device.last_temperature = payload["value"]
+        device.set_temperature(payload["value"])
     elif topic_structure[3] == "umidade":
-        device.last_humidity = payload["value"]
+        device.set_humidity(payload["value"])
     elif topic_structure[3] == "estado":
         # TODO
-        pass
-
-    device.last_update = timezone.now()
-
-    # sometimes mqtt starts before django properly configured the database
-    try:
-        device.save()
-    except OperationalError:
-        # do nothing, device will send data again
         pass
 
 
