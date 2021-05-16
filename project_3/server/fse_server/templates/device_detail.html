@@ -30,6 +30,7 @@
                 <th>Name</th>
                 <th>GPIO</th>
                 <th>Last State</th>
+                <th>Alarms</th>
             </tr>
 
             {% for input in object.inputs.all %}
@@ -37,10 +38,14 @@
                 <td>{{input.name}}</td>
                 <td>{{input.gpio_id}}</td>
                 <td>{{input.last_state}}</td>
+                <td><a href="{% url 'alarm_list' input.pk %}">Go to alarms...</a></td>
             </tr>
             {% empty %}
             <tr>
                 <td>No inputs registered</td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
             </tr>
             {% endfor %}
 
@@ -68,6 +73,9 @@
             {% empty %}
             <tr>
                 <td>No outputs registered</td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
             </tr>
             {% endfor %}
 

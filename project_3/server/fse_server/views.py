@@ -1,7 +1,15 @@
-from django.forms.forms import Form
-from django.views.generic import TemplateView, FormView, DetailView, DeleteView
+from django.urls.base import resolve
+from django.views.generic import (
+    TemplateView,
+    FormView,
+    DetailView,
+    DeleteView,
+    View,
+    ListView,
+)
 from django.views.generic.base import View
 from django.urls import reverse_lazy
+from django.http import JsonResponse
 from django.db.models import Count
 from rest_framework import viewsets
 
@@ -14,16 +22,18 @@ class MainView(TemplateView):
     template_name = "home.html"
 
 
-class DeviceFormView(FormView):
-    form_class = forms.DeviceForm
-    template_name = "form.html"
-    success_url = reverse_lazy("main")
-
+class FormViewWithKwargs(FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
 
         return kwargs
+
+
+class DeviceFormView(FormViewWithKwargs):
+    form_class = forms.DeviceForm
+    template_name = "form.html"
+    success_url = reverse_lazy("main")
 
     def form_valid(self, form):
 
@@ -96,3 +106,74 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     queryset = models.Location.objects.all().order_by("name")
     serializer_class = serializers.LocationSerializer
+
+
+class AlarmListView(ListView):
+
+    model = models.Alarm
+    template_name = "alarm_list.html"
+
+    def get_queryset(self):
+
+        devInput_pk = self.kwargs["pk"]
+
+        return models.Alarm.objects.filter(target__pk=devInput_pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["input"] = models.DeviceInput.objects.filter(
+            pk=self.kwargs["pk"]
+        ).first()
+
+        return context
+
+
+class AlarmFormView(FormViewWithKwargs):
+
+    form_class = forms.AlarmForm
+    template_name = "form.html"
+
+    def get_success_url(self):
+        return reverse_lazy("alarm_list", kwargs={"pk": self.kwargs["pk"]})
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+
+class AlarmStateView(View):
+    def get(self, request, *args, **kwargs):
+
+        alarm_activated_objects = models.DeviceInput.objects.filter(
+            alarm_activated=True
+        )
+
+        if alarm_activated_objects.count() == 0:
+            return JsonResponse({"alarm_active": False})
+
+        response = {"alarm_active": True, "alarmed_devices": []}
+        for deviceInput in alarm_activated_objects:
+            response["alarmed_devices"].append(
+                f"{deviceInput.device.location.name}/{deviceInput.device.id}#gpio_{deviceInput.gpio_id}"
+            )
+
+        return JsonResponse(response)
+
+    def post(self, request, *args, **kwargs):
+        # disable all alarms
+        q = models.DeviceInput.objects.filter(alarm_activated=True)
+        for deviceInput in q:
+            deviceInput.alarm_activated = False
+            deviceInput.save()
+
+        return JsonResponse({"ok": True})
+
+
+class AlarmDeleteView(DeleteView):
+    model = models.Alarm
+    success_url = reverse_lazy("")
+    template_name = "delete.html"
+
+    def get_success_url(self) -> str:
+        return reverse_lazy("alarm_list", kwargs={"pk": self.object.target.pk})

@@ -4,7 +4,22 @@ from os import name
 from django import forms
 from django.core.validators import MaxLengthValidator
 
-from fse_server.models import Device, DeviceRegisterRequest, Location
+from fse_server.models import Alarm, Device, DeviceRegisterRequest, Location
+
+
+class AlarmForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+
+        deviceInput_pk = kwargs.pop("pk")
+
+        super(AlarmForm, self).__init__(*args, **kwargs)
+
+        self.fields["target"].initial = deviceInput_pk
+        self.fields["target"].disabled = True
+
+    class Meta:
+        model = Alarm
+        fields = ["target", "mode", "target_value"]
 
 
 class DeviceForm(forms.ModelForm):

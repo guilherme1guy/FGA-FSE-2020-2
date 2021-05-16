@@ -90,8 +90,14 @@ def route_location(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
     elif topic_structure[3] == "umidade":
         device.set_humidity(payload["value"])
     elif topic_structure[3] == "estado":
-        # TODO
-        pass
+
+        if "gpio" in payload:
+
+            changed_gpio = payload["gpio"]
+            input = device.inputs.filter(gpio_id=changed_gpio).first()
+            input.update_state(payload["value"])
+
+    # TODO: sync device with server output states
 
 
 def route_invalid(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):

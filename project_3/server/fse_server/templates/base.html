@@ -36,8 +36,7 @@
     <!-- Page content-->
     <div class="container">
 
-        {% if messages %}
-        <div class="messages">
+        <div class="messages p-3" id="message_div">
             {% for message in messages %}
             <div class="alert alert-dismissable {{ message.tags }}">
                 <button type="button" class="close" data-dismiss="alert">×</button>
@@ -45,7 +44,6 @@
             </div>
             {% endfor %}
         </div>
-        {% endif %}
 
 
         {% block content %}{% endblock %}
@@ -60,6 +58,103 @@
 
     <!-- Project JS-->
     <script src="{% static 'js/scripts.js' %}"></script>
+
+    <audio id="alarm_audio" muted autoplay>
+        <source src='{% static "assets/beep.mp3" %}' type="audio/mpeg">
+    </audio>>
+
+
+
+    <script>
+
+        var alarm_active = false;
+
+        var alarm_audio = $('#alarm_audio')[0];
+        alarm_audio.loop = true;
+
+        alarm_audio.play();
+
+        function disable_alarm() {
+            $.ajax({
+                type: 'POST',
+                url: '/alarms/',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (res) {
+                    console.log("Alarms disabled");
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+
+        }
+
+        function check_alarm() {
+
+            $.ajax({
+                type: 'GET',
+                url: '/alarms',
+                success: function (res) {
+
+
+                    if (res['alarm_active']) {
+
+                        alarm_active = true;
+
+                        let alarm_message_div = $('#alarm_message_text');
+
+                        if (alarm_message_div.length == 0) {
+
+                            $('#message_div').append(`
+                                <div id="alarm_message" class="alert  alert-danger">
+                                    <div id="alarm_message_text"></div>
+                                </div>
+                            `);
+
+                            alarm_message_div = $('#alarm_message_text');
+                        }
+
+
+                        let alarm_list_str = "";
+                        for (i in res['alarmed_devices']) {
+                            alarm_list_str += `<li>${res['alarmed_devices'][i]}</li>`
+                        }
+
+                        alarm_message_div.empty();
+                        alarm_message_div.append(`
+                        <p>Active alarms:</p>
+                        <ul>
+                            ${alarm_list_str}
+                        </ul>  
+                        
+                        <a onclick="disable_alarm()"><p>Disable all alarms</p></a>
+                        `);
+
+                    } else {
+
+                        alarm_active = false;
+
+                        if ($('#alarm_message').length > 0) {
+                            $('#alarm_message').detach();
+                        }
+
+                    }
+
+                    alarm_audio.muted = !alarm_active;
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        }
+
+        check_alarm();
+        setInterval(check_alarm, 3000);
+
+
+    </script>
 
     <!-- Page JS-->
     {% block js %}{% endblock %}

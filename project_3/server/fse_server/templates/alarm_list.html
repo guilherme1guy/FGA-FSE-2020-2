@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row">
+
+    <div class="col">
+
+        <h3>Alarms</h3>
+
+        <table class="table border">
+
+            <tr>
+                <th>Alarm</th>
+                <th>Delete</th>
+            </tr>
+
+            {% for alarm in object_list %}
+            <tr>
+                <td>{{alarm}}</td>
+                <td><a href="{% url 'alarm_delete' alarm.pk %}">Delete</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td>No alarms for this input </td>
+                <td> </td>
+            </tr>
+            {% endfor %}
+
+        </table>
+
+        <a href="{% url 'alarm_create' input.pk %}">
+            <button type="button" class="btn btn-success">Create alarm</button>
+        </a>
+
+    </div>
+
+
+</div>
+
+{% endblock %}
