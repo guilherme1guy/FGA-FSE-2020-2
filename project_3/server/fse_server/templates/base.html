@@ -59,16 +59,12 @@
     <!-- Project JS-->
     <script src="{% static 'js/scripts.js' %}"></script>
 
-
-    <audio id="alarm_audio" loop>
-        <source src='{% static "assets/beep.mp3" %}' type="audio/mpeg">
-    </audio>
-
     <script>
 
         var alarm_active = false;
 
-        var alarm_audio = $('#alarm_audio')[0];
+        var alarm_audio = new Audio('{% static "assets/beep.mp3" %}');
+        alarm_audio.loop = true;
 
         function disable_alarm() {
             $.ajax({
