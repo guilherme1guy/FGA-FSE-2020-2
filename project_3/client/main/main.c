@@ -114,6 +114,18 @@ void send_sensor_value_mqtt(char *type_string, int value)
     send_sensor_value_with_id_mqtt(type_string, value, -1);
 }
 
+void unregister_device()
+{
+
+    // avoiding writing location to nvs, unless needed
+    // only register flag will be written
+    // this will clear the device data and set to unregistered mode
+    // if the device still exists in the server, then the server will
+    // register the device again (with the data already set on the server)
+    write_int_to_nvs("registered", 0);
+    registered = false;
+}
+
 void handle_mqtt_event(char *data, int len)
 {
 
@@ -165,11 +177,7 @@ void handle_mqtt_event(char *data, int len)
     else if (unregister != NULL)
     {
         printf("Received an unregister request\n");
-
-        // avoiding writing location to nvs, unless needed
-
-        write_int_to_nvs("registered", 0);
-        registered = false;
+        unregister_device();
     }
 
     cJSON_Delete(msg);

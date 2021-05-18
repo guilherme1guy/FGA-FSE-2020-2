@@ -9,6 +9,7 @@
 xQueueHandle interruption_queue;
 
 extern void send_sensor_value_with_id_mqtt(char *type_string, int value, int gpio);
+extern void unregister_device();
 
 static void IRAM_ATTR gpio_isr_handler(void *args)
 {
@@ -26,11 +27,31 @@ void handle_gpio_input_interrupt(void *params)
         {
             // De-bouncing
             int state = gpio_get_level(pin);
+            int count = 0;
+
+            int time_to_reset = 5000 / portTICK_PERIOD_MS; // 5s to reset
+            int target_count = time_to_reset / (50 / portTICK_PERIOD_MS);
 
             gpio_isr_handler_remove(pin);
 
             printf("GPIO#%d state: %d\n", pin, state);
             send_sensor_value_with_id_mqtt("estado", state, pin);
+
+            // check if button is held for a long period of time
+            while (gpio_get_level(pin) == state && state == 0)
+            {
+                count++;
+                printf("GPIO#%d state: %d held for %d time(s)\n", pin, state, count);
+
+                if (count == target_count)
+                {
+                    printf("Reseting device settings\n");
+                    unregister_device();
+                    break;
+                }
+
+                vTaskDelay(50 / portTICK_PERIOD_MS);
+            }
 
             // Enable interruption again
             vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -51,7 +72,7 @@ void setup_input_pin(int pin)
     gpio_pullup_dis(pin);
 
     // setup interruption for pin
-    gpio_set_intr_type(pin, GPIO_INTR_POSEDGE);
+    gpio_set_intr_type(pin, GPIO_INTR_ANYEDGE);
     gpio_isr_handler_add(pin, gpio_isr_handler, (void *)pin);
 }
 
