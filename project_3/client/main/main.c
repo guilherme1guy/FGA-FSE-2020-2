@@ -14,6 +14,7 @@
 #include "mqtt.h"
 #include "nvs.h"
 #include "dht11.h"
+#include "gpio.h"
 
 xSemaphoreHandle wifiSemaphore;
 xSemaphoreHandle MQTTSemaphore;
@@ -22,9 +23,9 @@ static uint8_t mac_id[6];
 char mac_str[13];
 char device_topic[45];
 
-#define LED_GPIO 2
-#define BUTTON_GPIO 0
-#define DHT_GPIO 4
+#define LED_GPIO GPIO_NUM_2
+#define BUTTON_GPIO GPIO_NUM_0
+#define DHT_GPIO GPIO_NUM_4
 
 // lists used to generate io_info for server registration
 const int inputs[] = {BUTTON_GPIO, DHT_GPIO};
@@ -300,5 +301,20 @@ void app_main(void)
     xTaskCreate(&serverComunicationTask, "Broker Communication", 4096, NULL, 1, NULL);
 
     // start DHT11
-    DHT11_init(GPIO_NUM_4);
+    DHT11_init(DHT_GPIO);
+
+    // start gpio
+    init_gpio_handler();
+
+    // register inputs
+    printf("Registering input GPIO#%d\n", BUTTON_GPIO);
+    setup_input_pin(BUTTON_GPIO);
+    // GPIO_4/DHT_GPIO is not registered here, since DHT will handle it
+
+    // register outputs
+    for (int i = 0; i < sizeof(outputs) / sizeof(outputs[0]); i++)
+    {
+        printf("Registering output GPIO#%d\n", outputs[i]);
+        setup_output_pin(outputs[i]);
+    }
 }
