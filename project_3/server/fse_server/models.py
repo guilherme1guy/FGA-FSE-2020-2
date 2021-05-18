@@ -1,4 +1,4 @@
-from fse_server import csv_logger
+from fse_server import csv_logger, mqtt
 from django.db import models
 from django.core import validators
 from django.db.models.deletion import CASCADE, RESTRICT
@@ -139,6 +139,18 @@ class DeviceOutput(models.Model):
     gpio_id = models.IntegerField(verbose_name="GPIO Port")
 
     device = models.ForeignKey(Device, related_name="outputs", on_delete=CASCADE)
+
+    def update_state(self, state):
+
+        if state == True:
+            integer_state = 1
+        else:
+            integer_state = 0
+
+        self.last_state = state
+        self.save()
+
+        mqtt.send_gpio_output_to_device(self.device.id, self.gpio_id, integer_state)
 
     class Meta:
         unique_together = [["gpio_id", "device"]]

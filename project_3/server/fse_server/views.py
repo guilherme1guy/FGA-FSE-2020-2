@@ -8,8 +8,8 @@ from django.views.generic import (
     ListView,
 )
 from django.views.generic.base import View
-from django.urls import reverse_lazy
-from django.http import JsonResponse
+from django.urls import reverse_lazy, reverse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.db.models import Count
 from rest_framework import viewsets
 
@@ -179,3 +179,18 @@ class AlarmDeleteView(DeleteView):
 
     def get_success_url(self) -> str:
         return reverse_lazy("alarm_list", kwargs={"pk": self.object.target.pk})
+
+
+class DeviceOutputChangeStateView(View):
+    def get(self, request, *args, **kwargs):
+
+        device_out_pk = self.kwargs["pk"]
+        state = self.kwargs["state"]
+
+        device_out = models.DeviceOutput.objects.filter(pk=device_out_pk).first()
+
+        device_out.update_state(state)
+
+        return HttpResponseRedirect(
+            reverse_lazy("device_detail", kwargs={"pk": device_out.device.pk})
+        )

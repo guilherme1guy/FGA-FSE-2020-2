@@ -44,6 +44,11 @@ urlpatterns = [
         views.DeviceDeleteView.as_view(),
         name="device_delete",
     ),
+    path(
+        "device/set_state/<str:pk>/<int:state>",
+        views.DeviceOutputChangeStateView.as_view(),
+        name="device_set_out_state",
+    ),
     path("alarms/", views.AlarmStateView.as_view(), name="alarm_state"),
     path("alarms/<pk>", views.AlarmListView.as_view(), name="alarm_list"),
     path("alarms/<pk>/create", views.AlarmFormView.as_view(), name="alarm_create"),

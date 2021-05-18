@@ -15,11 +15,24 @@ from fse_server.models import DeviceRegisterRequest, Device, Location
 SELF_SENDER_NAME = "server"
 
 
-def send_location_to_device(device_mac, location_name):
-    topic = settings.MQTT_BASE_TOPIC + f"dispositivos/{device_mac}"
+def send_message_to_device(device, message):
 
-    client.publish(
-        topic,
+    topic = settings.MQTT_BASE_TOPIC + f"dispositivos/{device}"
+
+    client.publish(topic, message)
+
+
+def send_gpio_output_to_device(device, gpio_id, state):
+    send_message_to_device(
+        device,
+        json.dumps({"sender": SELF_SENDER_NAME, "gpio": gpio_id, "state": state}),
+    )
+
+
+def send_location_to_device(device, location_name):
+
+    send_message_to_device(
+        device,
         json.dumps(
             {
                 "sender": SELF_SENDER_NAME,
@@ -30,10 +43,9 @@ def send_location_to_device(device_mac, location_name):
 
 
 def send_unregister_to_device(device):
-    topic = settings.MQTT_BASE_TOPIC + f"dispositivos/{device}"
 
-    client.publish(
-        topic,
+    send_message_to_device(
+        device,
         json.dumps({"sender": SELF_SENDER_NAME, "unregister": True}),
     )
 

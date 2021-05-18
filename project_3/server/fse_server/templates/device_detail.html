@@ -63,12 +63,17 @@
                 <th>Action</th>
             </tr>
 
-            {% for input in object.outputs.all %}
+            {% for output in object.outputs.all %}
             <tr>
-                <td>{{input.name}}</td>
-                <td>{{input.gpio_id}}</td>
-                <td>{{input.last_state}}</td>
-                <td><a href="#">Change State</a></td>
+                <td>{{output.name}}</td>
+                <td>{{output.gpio_id}}</td>
+                <td>{{output.last_state}}</td>
+                {% if output.last_state %}
+                <td><a href="{% url 'device_set_out_state' output.pk 0 %}">Change State</a></td>
+                {% else %}
+                <td><a href="{% url 'device_set_out_state' output.pk 1 %}">Change State</a></td>
+                {% endif %}
+
             </tr>
             {% empty %}
             <tr>
