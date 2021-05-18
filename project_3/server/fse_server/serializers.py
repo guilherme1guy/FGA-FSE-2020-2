@@ -18,6 +18,9 @@ class LocationSerializer(serializers.ModelSerializer):
 
     devices = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
+    temperature = serializers.ReadOnlyField()
+    humidity = serializers.ReadOnlyField()
+
     class Meta:
         model = models.Location
         fields = "__all__"

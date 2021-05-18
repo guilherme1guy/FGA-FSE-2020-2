@@ -12,11 +12,11 @@
         <ul class="border">
 
             <li>Mac Address: {{object.id}} </li>
-            <li>DHT: {{object.is_dht_present}} </li>
+            <li>Has DHT Sensor: {{object.is_dht_present}} </li>
 
             <li>Temperature: {{object.last_temperature}} </li>
             <li>Humidity: {{object.last_humidity}} </li>
-            <li>Updated at: {{object.last_update}} </li>
+            <li>Updated at: {{object.last_update|date:'Y-m-d H:i:s' }} (UTC) </li>
 
             <li>Location: {{object.location.name}} </li>
 

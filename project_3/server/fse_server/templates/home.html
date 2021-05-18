@@ -78,8 +78,13 @@
             locations_row.empty();
 
             locations_row.append(`
-            <div class="accordion" id="locations_accordion">
             
+            <div class="col">
+
+                <div class="accordion" id="locations_accordion">
+                    
+                </div>
+
             </div>
             `);
 
@@ -90,6 +95,8 @@
                 let loc = res[rid];
 
                 let name = loc['name'];
+                let temperature = loc['temperature'];
+                let Humidity = loc['humidity'];
 
                 locations_accordion.append(`
 
@@ -103,7 +110,18 @@
 
                         <div id="panelsStayOpen-collapse_${name}" class="accordion-collapse collapse show">
                           <div class="accordion-body p-3" id="location_accordion_content">
-                            <div class="row" id="location_${name}">
+                            <div class="col">
+                                <div class="col" id="location_${name}">
+                                    <h5>
+                                        <p>Temperature: ${temperature}ºc </p>
+                                        <p>    Humidity: ${Humidity}% </p>
+                                        
+                                    </h5>
+                                </div>
+                               
+                                <div class="col" id="location_${name}">
+    
+                                </div>
 
                             </div>
                           </div>

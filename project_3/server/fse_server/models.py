@@ -18,23 +18,30 @@ class Location(models.Model):
         ],
     )
 
+    def _get_device_list(self):
+        q = self.devices.all()
+        all_devices = list(q)
+        device_count = q.count()
+
+        return all_devices, device_count
+
     @property
     def temperature(self):
         temperature = 0
 
-        devices = self.device_set.objects.all()
-        temperature = sum(map(lambda x: x.temperature, devices)) / len(devices)
+        device_list, device_count = self._get_device_list()
+        temperature = sum(list(map(lambda x: x.last_temperature, device_list)))
 
-        return temperature
+        return temperature / device_count
 
     @property
     def humidity(self):
         humidity = 0
 
-        devices = self.device_set.objects.all()
-        humidity = sum(map(lambda x: x.humidity, devices)) / len(devices)
+        device_list, device_count = self._get_device_list()
+        humidity = sum(list(map(lambda x: x.last_humidity, device_list)))
 
-        return humidity
+        return humidity / device_count
 
 
 class DeviceRegisterRequest(models.Model):
