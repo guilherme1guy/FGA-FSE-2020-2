@@ -114,6 +114,17 @@ void send_sensor_value_mqtt(char *type_string, int value)
     send_sensor_value_with_id_mqtt(type_string, value, -1);
 }
 
+char *get_pin_str(int pin)
+{
+
+    char *buffer = calloc(7, sizeof(char));
+
+    sprintf(buffer, "gpio_%d", pin);
+
+    // calling function must free this string
+    return buffer;
+}
+
 void unregister_device()
 {
 
@@ -123,6 +134,16 @@ void unregister_device()
     // if the device still exists in the server, then the server will
     // register the device again (with the data already set on the server)
     write_int_to_nvs("registered", 0);
+
+    // reset outputs values
+    char *pin_key;
+    for (int i = 0; i < sizeof(outputs); i++)
+    {
+        pin_key = get_pin_str(outputs[i]);
+        write_int_to_nvs(pin_key, 0);
+        free(pin_key);
+    }
+
     registered = false;
 }
 
@@ -144,6 +165,8 @@ void handle_mqtt_event(char *data, int len)
 
     cJSON *location = cJSON_GetObjectItem(msg, "location");
     cJSON *unregister = cJSON_GetObjectItemCaseSensitive(msg, "unregister");
+    cJSON *gpio_id = cJSON_GetObjectItemCaseSensitive(msg, "gpio");
+    cJSON *gpio_state = cJSON_GetObjectItemCaseSensitive(msg, "state");
 
     if (location != NULL)
     {
@@ -178,6 +201,20 @@ void handle_mqtt_event(char *data, int len)
     {
         printf("Received an unregister request\n");
         unregister_device();
+    }
+    else if (gpio_id != NULL && gpio_state != NULL)
+    {
+
+        int gpio_pin = gpio_id->valueint;
+        int state = gpio_state->valueint;
+
+        printf("Server set GPIO#%d to %d\n", gpio_pin, state);
+
+        write_to_output_pin(gpio_pin, state);
+
+        char *pin_key = get_pin_str(gpio_pin);
+        write_int_to_nvs(pin_key, state);
+        free(pin_key);
     }
 
     cJSON_Delete(msg);
@@ -320,9 +357,20 @@ void app_main(void)
     // GPIO_4/DHT_GPIO is not registered here, since DHT will handle it
 
     // register outputs
+    char *pin_key;
     for (int i = 0; i < sizeof(outputs) / sizeof(outputs[0]); i++)
     {
         printf("Registering output GPIO#%d\n", outputs[i]);
         setup_output_pin(outputs[i]);
+
+        // restore last value informed by server
+        pin_key = get_pin_str(outputs[i]);
+        int stored_value = read_int_from_nvs(pin_key);
+        free(pin_key);
+
+        if (stored_value != -1)
+        {
+            write_to_output_pin(outputs[i], stored_value);
+        }
     }
 }
