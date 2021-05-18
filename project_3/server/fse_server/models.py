@@ -151,6 +151,10 @@ class DeviceOutput(models.Model):
         self.save()
 
         mqtt.send_gpio_output_to_device(self.device.id, self.gpio_id, integer_state)
+        csv_logger.CsvLogger.log("command", f"Set {str(self)} state to {state}")
+
+    def __str__(self) -> str:
+        return f"{self.device.location.name}/{self.device.id}#gpio_{self.gpio_id}"
 
     class Meta:
         unique_together = [["gpio_id", "device"]]
