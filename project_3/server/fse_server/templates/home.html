@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<div class="row p-3" id="register_request_row">
+<div class="row p-3 align-items-stretch" id="register_request_row">
 
     <div class="col-3">
         ....
@@ -110,16 +110,20 @@
 
                         <div id="panelsStayOpen-collapse_${name}" class="accordion-collapse collapse show">
                           <div class="accordion-body p-3" id="location_accordion_content">
-                            <div class="col">
-                                <div class="col" id="location_${name}">
-                                    <h5>
-                                        <p>Temperature: ${temperature}ºc </p>
-                                        <p>    Humidity: ${Humidity}% </p>
-                                        
-                                    </h5>
-                                </div>
+                            <div class="row">
+
+                                
+
+                                    <div class="col-12">
+                                        <h5>
+                                            <p>Temperature: ${temperature}ºc </p>
+                                            <p>    Humidity: ${Humidity}% </p>
+                                            
+                                        </h5>
+                                    </div>
+                                
                                
-                                <div class="col" id="location_${name}">
+                                <div class="row" id="location_${name}">
     
                                 </div>
 
@@ -138,8 +142,10 @@
                     let device = loc['devices'][did];
 
                     current_location_row.append(`
-                        <div id="card_dev_${device}" class="card p-3 m-3" style="width: 18rem;">
+                    <div class="col p-3">   
+                        <div id="card_dev_${device}" class="card" style="width: 18rem;">
                         </div>
+                    </div>
                     `);
 
                     $.ajax({
@@ -192,7 +198,7 @@
     }
 
     page_loop();
-    setInterval(update_devices, 2000);
+    setInterval(page_loop, 2000);
 
 </script>
 
