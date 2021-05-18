@@ -6,6 +6,7 @@
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include "freertos/semphr.h"
+#include "driver/gpio.h"
 
 #include "cJSON.h"
 
@@ -21,8 +22,13 @@ static uint8_t mac_id[6];
 char mac_str[13];
 char device_topic[45];
 
-int inputs[] = {0};  // GPIO 0: Button
-int outputs[] = {2}; // GPIO 2: Led
+#define LED_GPIO 2
+#define BUTTON_GPIO 0
+#define DHT_GPIO 4
+
+// lists used to generate io_info for server registration
+const int inputs[] = {BUTTON_GPIO, DHT_GPIO};
+const int outputs[] = {LED_GPIO};
 
 bool registered = false;
 char *device_location = NULL;
@@ -46,8 +52,8 @@ char *create_registration_message()
     // io_info
     cJSON *io_info = cJSON_CreateObject();
 
-    cJSON *input_info = cJSON_CreateIntArray(inputs, 1);
-    cJSON *output_info = cJSON_CreateIntArray(outputs, 1);
+    cJSON *input_info = cJSON_CreateIntArray(inputs, sizeof(inputs) / sizeof(inputs[0]));
+    cJSON *output_info = cJSON_CreateIntArray(outputs, sizeof(outputs) / sizeof(outputs[0]));
 
     cJSON_AddItemToObject(io_info, "input", input_info);
     cJSON_AddItemToObject(io_info, "output", output_info);
@@ -66,7 +72,7 @@ char *create_registration_message()
     return msg_str;
 }
 
-void send_sensor_value_mqtt(char *type_string, int value)
+void send_sensor_value_with_id_mqtt(char *type_string, int value, int gpio)
 {
     char base_topic[] = "fse2020/160123186/\0";
 
@@ -86,6 +92,13 @@ void send_sensor_value_mqtt(char *type_string, int value)
 
     cJSON_AddItemToObject(msg, "value", value_obj);
 
+    if (gpio != -1)
+    {
+        cJSON *gpio_obj = cJSON_CreateNumber((double)gpio);
+
+        cJSON_AddItemToObject(msg, "gpio", gpio_obj);
+    }
+
     char *msg_str = cJSON_Print(msg);
 
     mqtt_send_message(topic, msg_str);
@@ -93,6 +106,11 @@ void send_sensor_value_mqtt(char *type_string, int value)
     cJSON_Delete(msg);
     free(msg_str);
     free(topic);
+}
+
+void send_sensor_value_mqtt(char *type_string, int value)
+{
+    send_sensor_value_with_id_mqtt(type_string, value, -1);
 }
 
 void handle_mqtt_event(char *data, int len)
@@ -183,7 +201,7 @@ void serverComunicationTask(void *params)
 
                 send_sensor_value_mqtt("temperatura", currentData.temperature);
                 send_sensor_value_mqtt("umidade", currentData.humidity);
-                send_sensor_value_mqtt("estado", currentData.status);
+                send_sensor_value_with_id_mqtt("estado", currentData.status, DHT_GPIO);
             }
             else
             {
