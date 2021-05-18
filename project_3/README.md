@@ -11,7 +11,7 @@
 O projeto foi dividido em 2 modulos:
 
 - Servidor em Python para gerenciar os clientes e prover interface grafica ao usuário
-- Código em c que é executado na ESP32
+- Código em C que é executado na ESP32
 
 Além disso, elaborei um simulador simples, que me auxiliou a iniciar o desenvolvimento do servidor emulando algumas das mensagens MQTT que a ESP32 deveria enviar.
 
@@ -39,7 +39,7 @@ Além disso, elaborei um simulador simples, que me auxiliou a iniciar o desenvol
 
 ### Servidor
 
-[](docs/ui_img_1.png)
+![](docs/ui_img_1.png)
 
 Esta é a tela principal do programa. A área em vermelho mostra dispositivos que se identificaram, mas ainda necessitam do cadastro do usuário. 
 
@@ -47,11 +47,11 @@ A área em amarelo mostra todas as localidades e seus dispositivos, além de exi
 
 Ao clicar na área em verde o usuário irá retornar para a página inicial.
 
-[](docs/ui_img_2.png)
+![](docs/ui_img_2.png)
 
 Na hora de cadastrar um dispositivo é necessário nomear suas entradas e saídas, além de definir uma localidade. Caso a localidade não exista, ela será criada automaticamente.
 
-[](docs/ui_img_3.png)
+![](docs/ui_img_3.png)
 
 A tela de detalhes do dispositivo exibe as informações dele, além de suas entradas e saídas, permitindo a execução de ações nelas. Além disso é possível remover o dispositivo nesta tela.
 
@@ -59,15 +59,15 @@ Clicando em "Go to alarms..." é possível acessar a tela de configuração de a
 
 Ao clicar em "Change State" será enviada uma mensagem para a ESP32 trocar o estado de determinada saída, como por exemplo, ligar um LED.
 
-[](docs/ui_img_4.png)
+![](docs/ui_img_4.png)
 
 É possível definir alarmes para as entradas do dispositivo. A tela de alarmes exibe todos os alarmes criados para uma entrada em específico.
 
-[](docs/ui_img_5.png)
+![](docs/ui_img_5.png)
 
 Ao criar um alarme é possível definir um valor alvo e um método de comparação para a ativação do alarme.
 
-[](docs/ui_img_6.png)
+![](docs/ui_img_6.png)
 
 Caso algum alarme esteja ativo, será exibido um texto, identificando-o. Além da opção de desativar o alarme.
 
@@ -77,8 +77,8 @@ Um aviso sonoro também é tocado, mas em alguns navegadores é necessário inte
 
 Ao iniciar a placa, ela buscará se identificar no servidor e ficará aguardando o registro ser completo. Caso ela já esteja registrada irá enviar dados ao servidor e restaurará o valor das saídas GPIO. Caso o usuário tenha removido a placa no servidor, ela retornará aos dados iniciais.
 
-A GPIO_O está configurada como uma das entradas aceitas no servidor. Caso um alarme esteja configurado apertar este botão irá acioná-lo. Segurar o botão da GPIO_0  por 5 segundos irá reiniciar a placa para as configurações padrão. Atenção: caso o servidor ainda possua o registro da placa, ela será automaticamente registrada novamente. 
+A GPIO_0 está configurada como uma das entradas aceitas no servidor. Caso um alarme esteja configurado apertar este botão irá acioná-lo. Segurar o botão da GPIO_0  por 5 segundos irá reiniciar a placa para as configurações padrão. Atenção: caso o servidor ainda possua o registro da placa, ela será automaticamente registrada novamente. 
 
 ## Demonstração em vídeo
 
-TODO
+[<img src="https://img.youtube.com/vi/iaxrprUEXho/hqdefault.jpg">](https://youtu.be/iaxrprUEXho)
