@@ -13,7 +13,7 @@ from django.http import JsonResponse
 from django.db.models import Count
 from rest_framework import viewsets
 
-from fse_server import models
+from fse_server import csv_logger, models
 from fse_server import serializers
 from fse_server import forms
 
@@ -166,6 +166,8 @@ class AlarmStateView(View):
         for deviceInput in q:
             deviceInput.alarm_activated = False
             deviceInput.save()
+
+        csv_logger.CsvLogger.log("alarm", "User deactivated alarms")
 
         return JsonResponse({"ok": True})
 

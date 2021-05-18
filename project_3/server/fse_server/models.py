@@ -1,3 +1,4 @@
+from fse_server import csv_logger
 from django.db import models
 from django.core import validators
 from django.db.models.deletion import CASCADE, RESTRICT
@@ -115,6 +116,10 @@ class DeviceInput(models.Model):
         # check if an alarm should be raised
         for alarm in self.alarms.all():
             if alarm.should_raise(value):
+
+                if not self.alarm_activated:
+                    csv_logger.CsvLogger.log("alarm", f"Alarm active for {str(self)}")
+
                 self.alarm_activated = True
                 break
 
